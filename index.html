@@ -319,7 +319,7 @@ function cloneState(s){return {pos:s.pos,buffer:s.buffer.slice(),marks:new Map(s
 function feed(units,st,raw){
   const h=norm(raw);if(!h)return [];
   const events=[];
-  for(let b=1;b<=2;b++){const pu=units[st.pos-b];if(pu&&!pu.num&&similar(h,pu.n)&&!(units[st.pos]&&similar(h,units[st.pos].n)))return events}
+  for(let b=1;b<=8;b++){const pu=units[st.pos-b];if(pu&&!pu.num&&similar(h,pu.n)&&!(units[st.pos]&&similar(h,units[st.pos].n)))return events}
   const LOOK=5;let found=-1;
   for(let k=0;k<=LOOK;k++){const u=units[st.pos+k];if(!u)break;
     const match=u.num?isNumWord(h):similar(h,u.n);
@@ -390,10 +390,10 @@ function loadVoices(){voices=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.
 }
 function speak(text,rate){return new Promise(res=>{
   if(!("speechSynthesis" in window))return res();
-  const u=new SpeechSynthesisUtterance(text);const v=voices.find(v=>v.name===settings.voice);if(v){u.voice=v;u.lang=v.lang}else u.lang="en-US";
-  u.rate=rate||Number(settings.rate)||0.9;u.pitch=1.05;
-  let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;
+  let done=false;const fin=()=>{if(!done){done=true;res()}};
   setTimeout(fin,Math.max(4000,text.length*140));
+  let u;try{u=new SpeechSynthesisUtterance(text);const v=voices.find(v=>v.name===settings.voice);if(v){try{u.voice=v}catch(e){}u.lang=v.lang}else u.lang="en-US";
+  u.rate=rate||Number(settings.rate)||0.9;u.pitch=1.05;u.onend=fin;u.onerror=fin;}catch(e){return fin()}
   if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(()=>speechSynthesis.speak(u),120)}else speechSynthesis.speak(u);
 })}
 
@@ -518,7 +518,7 @@ function startRec(){
   };
   rec.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){
       if(listening&&elapsed>0){listening=false;$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.");}
-      else{listening=false;store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus("<b>The microphone is blocked.</b> Allow the microphone for this page (Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow. iPad: Settings › Apps › Safari › Microphone › Allow), then press Start reading again.");pause()}}
+      else{listening=false;pause();store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus("<b>The microphone is blocked.</b> Allow the microphone for this page (Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow. iPad: Settings › Apps › Safari › Microphone › Allow), then press Start reading again.")}}
     else if(e.error==="network"){setStatus("The listening service needs an internet connection.")}};
   rec.onend=()=>{if(listening&&!teacherTalking&&running){setTimeout(()=>{try{rec.start()}catch(_){$("resumeMic").hidden=false}},IS_ANDROID?40:200)}};
   try{rec.start();listening=true;$("resumeMic").hidden=true}catch(_){$("resumeMic").hidden=false}
@@ -545,7 +545,7 @@ async function correctNow(words,ds){
 
 /* ---------- timer ---------- */
 function resumeClock(){t0=performance.now()-elapsed*1000;clearInterval(tick);tick=setInterval(()=>{elapsed=(performance.now()-t0)/1000;renderBooth()},250)}
-function pauseClock(){clearInterval(tick);tick=null}
+function pauseClock(){if(tick)elapsed=(performance.now()-t0)/1000;clearInterval(tick);tick=null}
 async function startReading(){
   $("resultBox").hidden=true;$("practiceBox").hidden=true;ended=false;running=true;
   if("wakeLock" in navigator)navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{});
@@ -651,7 +651,7 @@ async function practice(words,box){
       await speak(right?["Great!","Yes, that's right!","Well done!"][i%3]:"Not quite.");
     }
     const k=w.toLowerCase();const r_=DB.words[k];
-    if(r_){if(right)r_.ok=(r_.ok||0)+1;r_.lastPractice=new Date().toISOString()}
+    if(r_){if(right)r_.ok=(r_.ok||0)+1;r_.lastPractice=new Date().toISOString();saveDB();renderWords()}
   }
   saveDB();renderWords();
   if(!stopped){box.innerHTML=`<div class="practice"><div class="big ok">All done!</div><div class="sub">Words she gets right twice move to “learned”.</div></div>`;await speak("All done. Great practice!")}
@@ -727,27 +727,31 @@ async function saveToFolder(ask){if(!dirHandle)return;try{
 const tabs={tabRead:"viewRead",tabLessons:"viewLessons",tabWords:"viewWords",tabProg:"viewProg"};
 function showTab(t){Object.keys(tabs).forEach(o=>{$(o).setAttribute("aria-selected",o===t);$(tabs[o]).hidden=o!==t;$(tabs[o]).style.display=o===t?"grid":"none"})}
 /* ---------- microphone setup ---------- */
+const SITE_URL="https://zeriab2020.github.io/rodina-reads/";
+const SITE_MSG=`<b>This link can’t use the microphone.</b> Open Rodina’s reading website instead: <a href="${SITE_URL}" target="_blank" rel="noopener">${SITE_URL.replace("https://","")}</a>`;
 function micBlockedByPage(){try{const fp=document.permissionsPolicy||document.featurePolicy;return !!(fp&&fp.allowsFeature&&!fp.allowsFeature("microphone"))}catch(e){return false}}
 function micHelp(){return IS_ANDROID?"On Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow, then reload."
   :/iPad|iPhone|Macintosh/.test(navigator.userAgent)&&"ontouchend" in document?"On iPad: tap <b>aA</b> in the address bar › Website Settings › Microphone › Allow, then reload."
   :"Click the icon left of the address bar › Microphone › Allow, then reload."}
 async function micSetup(){
   const card=$("micCard"),msg=$("micMsg");
-  if(!SR||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||micBlockedByPage()){
-    msg.innerHTML="<b>This link can’t use the microphone.</b> Open Rodina’s reading website in "+(IS_ANDROID?"Chrome":"Safari")+" instead, so the teacher can hear her.";
+  if(!SR){msg.innerHTML="<b>This browser can’t listen.</b> Open this page in <b>Safari</b> on an iPad, or <b>Chrome</b> on Android or a computer.";
+    $("micBtn").hidden=true;$("micSkip").hidden=false;return false}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||micBlockedByPage()){
+    msg.innerHTML=SITE_MSG;
     $("micBtn").hidden=true;$("micSkip").hidden=false;return false}
   msg.textContent="Asking for the microphone…";
   try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());
     store.set("rodina.micok",true);card.hidden=true;speak("Thank you. Now I can hear you.");return true}
   catch(e){
     if(e&&(e.name==="NotAllowedError"||e.name==="SecurityError")){
-      msg.innerHTML=micBlockedByPage()||e.name==="SecurityError"?"<b>This link can’t use the microphone.</b> Open Rodina’s reading website instead, so the teacher can hear her.":"<b>The microphone is turned off for this page.</b> "+micHelp();
+      msg.innerHTML=micBlockedByPage()||e.name==="SecurityError"?SITE_MSG:"<b>The microphone is turned off for this page.</b> "+micHelp();
     }else if(e&&e.name==="NotFoundError"){msg.innerHTML="<b>No microphone found</b> on this device."}
     else msg.innerHTML="<b>The microphone didn’t turn on.</b> "+micHelp();
     $("micSkip").hidden=false;return false}
 }
 function wire(){
-  if(!store.get("rodina.micok",false))$("micCard").hidden=false;
+  if(!store.get("rodina.micok",false)||micBlockedByPage()||!SR){$("micCard").hidden=false;if(micBlockedByPage()||!SR)micSetup()}
   $("micBtn").onclick=micSetup;
   $("micSkip").onclick=()=>{$("micCard").hidden=true};
   $("startBtn").onclick=()=>running?pause():startReading();
