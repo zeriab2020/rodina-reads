@@ -288,6 +288,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <button class="btn" id="folderBtn" type="button">Save records to a folder…</button>
         <span class="hint" id="folderState"></span>
       </div>
+      <p class="hint" style="opacity:.7">App version: 7 Oct 2026 · 12:50</p>
       <p class="hint">Records stay in this browser on this device. Use <b>Send progress</b> to share them by Messages, Mail or AirDrop.</p>
     </div>
   </section>
@@ -524,10 +525,12 @@ function startRec(){
     if(interim){const c=cloneState(st);feedText(units,c,interim);paint(c);$("heard").textContent="“"+interim.trim()+"”"}else paint();
     if(st.pos>=units.length&&!ended){ended=true;setTimeout(()=>finish(),600)}
   };
-  rec.onerror=e=>{if(me!==rec)return;if(e.error==="not-allowed"||e.error==="service-not-allowed"){
-      if(listening&&elapsed>0){listening=false;$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.");}
-      else{listening=false;pause();store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus("<b>The microphone is blocked.</b> Allow the microphone for this page (Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow. iPad: Settings › Apps › Safari › Microphone › Allow), then press Start reading again.")}}
-    else if(e.error==="network"){setStatus("The listening service needs an internet connection.")}};
+  rec.onerror=e=>{if(me!==rec)return;const er=e.error;
+    if(er==="no-speech"||er==="aborted")return;
+    if(er==="not-allowed"&&listening&&elapsed>0){listening=false;$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.");return}
+    if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){listening=false;pause();store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus(micErrorText(er));$("micMsg").innerHTML=micErrorText(er);return}
+    if(er==="network"){setStatus("The listening service needs an internet connection.");return}
+    setStatus("Listening problem ("+er+"). Press <b>Start reading</b> to try again.")};
   rec.onend=()=>{if(me===rec&&listening&&running){setTimeout(()=>{if(me!==rec||!listening||!running)return;try{recSess++;rec.start()}catch(_){$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.")}},IS_ANDROID?40:200)}};
   try{rec.start();listening=true;$("resumeMic").hidden=true}catch(_){$("resumeMic").hidden=false}
 }
@@ -750,6 +753,12 @@ function showTab(t){Object.keys(tabs).forEach(o=>{$(o).setAttribute("aria-select
 const SITE_URL="https://zeriab2020.github.io/rodina-reads/";
 const SITE_MSG=`<b>This link can’t use the microphone.</b> Open Rodina’s reading website instead: <a href="${SITE_URL}" target="_blank" rel="noopener">${SITE_URL.replace("https://","")}</a>`;
 function micBlockedByPage(){try{const fp=document.permissionsPolicy||document.featurePolicy;return !!(fp&&fp.allowsFeature&&!fp.allowsFeature("microphone"))}catch(e){return false}}
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
+function micErrorText(er){
+  if(er==="service-not-allowed"&&IS_IOS)return "<b>Dictation is turned off on this iPad.</b> The teacher needs it to listen. Open <b>Settings › General › Keyboard</b>, turn on <b>Enable Dictation</b>, then come back and reload this page.";
+  if(er==="service-not-allowed")return "<b>Speech recognition is turned off in this browser.</b> Use Safari on an iPad, or Chrome on Android or a computer.";
+  if(er==="audio-capture")return "<b>The microphone is busy or missing.</b> Close other apps using it (FaceTime, Zoom, a video call), then press Start reading again.";
+  return "<b>The microphone is blocked for this page.</b> "+micHelp();}
 function micHelp(){return IS_ANDROID?"On Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow, then reload."
   :/iPad|iPhone|Macintosh/.test(navigator.userAgent)&&"ontouchend" in document?"On iPad: tap <b>aA</b> in the address bar › Website Settings › Microphone › Allow, then reload."
   :"Click the icon left of the address bar › Microphone › Allow, then reload."}
