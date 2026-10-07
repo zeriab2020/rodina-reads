@@ -19,6 +19,7 @@
   --ok:#1f7a4d; --ok-soft:#dcf1e5;
   --warn:#b86a00; --warn-soft:#fbeed8;
   --read:#9fb3c8;
+  --owl:#8a5a2b; --owl-belly:#f3d9a8; --owl-eye:#ffffff; --beak:#f0a63a; --gold:#e8a400; --sky:#dcecfb;
   --display:"Bree Serif", Rockwell, Georgia, serif;
   --body:"Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
   color-scheme:light;
@@ -28,7 +29,7 @@
   --steel:#7fb0e0; --steel-soft:#1e3350;
   --err:#ff6b74; --err-soft:#3d1c22;
   --ok:#5fd39a; --ok-soft:#173527;
-  --warn:#f0a940; --warn-soft:#3a2a12; --read:#5d7088; color-scheme:dark}}
+  --warn:#f0a940; --warn-soft:#3a2a12; --read:#5d7088; --owl:#b07a44; --owl-belly:#5a4630; --owl-eye:#f4efe6; --beak:#f0a63a; --gold:#ffc83d; --sky:#1b2c44; color-scheme:dark}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
@@ -82,6 +83,45 @@ select{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);b
 .btn{font-weight:700;border-radius:12px;padding:12px 18px;cursor:pointer;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:1rem}
 .btn.primary{background:var(--steel);border-color:var(--steel);color:var(--paper)}
 .btn.stop{background:var(--err);border-color:var(--err);color:var(--paper)}
+/* Hoot the owl, the rocket trip, stars, stickers, confetti */
+.buddy{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.owl{width:84px;height:84px;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 90%}
+.owl .lid{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);animation:blink 5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(0)}96%,98%{transform:scaleY(1)}}
+.owl.cheer{animation:hop .6s ease-in-out 3}
+.owl.party{animation:hop .45s ease-in-out 6}
+.owl.oops{animation:wobble .5s ease-in-out 2}
+.owl.think{transform:rotate(-8deg)}
+@keyframes hop{50%{transform:translateY(-10px) rotate(4deg)}}
+@keyframes wobble{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.bubble{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:10px 14px;font-size:1.05rem;line-height:1.35;min-width:0}
+.bubble::before{content:"";position:absolute;left:-9px;top:50%;width:14px;height:14px;background:var(--paper);border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.bubble b{color:var(--steel)}
+.scores{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.score .goalbar{width:56px;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.score .goalbar i{display:block;height:100%;background:var(--ok)}
+.trip{grid-column:1/-1;position:relative;height:34px;margin:2px 4px}
+.trip .track{position:absolute;left:0;right:0;top:50%;height:8px;transform:translateY(-50%);border-radius:4px;background:repeating-linear-gradient(90deg,var(--line) 0 10px,transparent 10px 16px)}
+.trip .track i{display:block;height:100%;border-radius:4px;background:var(--steel);width:0;transition:width .4s ease}
+.trip .rocket{position:absolute;top:50%;left:0;font-size:26px;line-height:1;transform:translate(-50%,-50%) rotate(45deg);transition:left .4s ease}
+.trip .planet{position:absolute;right:-4px;top:50%;font-size:24px;line-height:1;transform:translateY(-50%)}
+.starsrow{font-size:2rem;letter-spacing:4px;line-height:1}
+.starsrow .off{filter:grayscale(1);opacity:.3}
+.starsrow span{display:inline-block;animation:pop .5s cubic-bezier(.3,1.6,.5,1) both}
+.starsrow span:nth-child(2){animation-delay:.2s}.starsrow span:nth-child(3){animation-delay:.4s}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.newsticker{display:flex;align-items:center;gap:12px;background:var(--paper);border:2px dashed var(--gold);border-radius:14px;padding:10px 14px}
+.newsticker .big{font-size:3rem;line-height:1;animation:pop .6s cubic-bezier(.3,1.6,.5,1) both}
+.stickergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.sticker{display:grid;justify-items:center;gap:4px;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:12px 6px;text-align:center}
+.sticker .e{font-size:2.6rem;line-height:1}
+.sticker.locked .e{filter:grayscale(1) brightness(.6);opacity:.25}
+.sticker small{font-size:.75rem;color:var(--muted)}
+.sticker.got{border-color:var(--gold);box-shadow:0 0 0 2px var(--warn-soft)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion:reduce){.owl,.owl *{animation:none!important}.trip .rocket,.trip .track i{transition:none}.starsrow span,.newsticker .big{animation:none}}
+.btn.bigtap{width:100%;font-size:1.25rem;padding:16px 18px;animation:pulse 1.4s ease-in-out infinite}
 .btn.small{padding:9px 13px;font-weight:400;font-size:.92rem}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn:focus-visible,.w:focus-visible,.parts button:focus-visible,.tabs button:focus-visible{outline:3px solid var(--steel);outline-offset:2px}
@@ -168,12 +208,37 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
     <button class="btn small" id="chooseBtn" type="button">All lessons</button>
   </header>
 
+  <section class="buddy" aria-live="polite">
+    <svg class="owl" id="owl" viewBox="0 0 100 100" role="button" tabindex="0" aria-label="Hoot the owl. Tap for a joke.">
+        <path d="M22 30 L30 8 L42 24 Z M78 30 L70 8 L58 24 Z" fill="var(--owl)"/>
+        <ellipse cx="50" cy="58" rx="34" ry="36" fill="var(--owl)"/>
+        <ellipse cx="50" cy="70" rx="20" ry="22" fill="var(--owl-belly)"/>
+        <path d="M40 66 q4 4 8 0 M52 72 q4 4 8 0 M42 80 q4 4 8 0" stroke="var(--owl)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="36" cy="42" r="13" fill="var(--owl-eye)"/><circle cx="64" cy="42" r="13" fill="var(--owl-eye)"/>
+        <circle id="pupL" cx="37" cy="43" r="6" fill="var(--ink)"/><circle id="pupR" cx="63" cy="43" r="6" fill="var(--ink)"/>
+        <circle cx="39" cy="40" r="2" fill="var(--owl-eye)"/><circle cx="65" cy="40" r="2" fill="var(--owl-eye)"/>
+        <rect class="lid" x="22" y="29" width="28" height="26" rx="13" fill="var(--owl)"/><rect class="lid" x="50" y="29" width="28" height="26" rx="13" fill="var(--owl)"/>
+        <path d="M45 52 L55 52 L50 61 Z" fill="var(--beak)"/>
+        <path d="M17 58 q-6 14 6 24 M83 58 q6 14 -6 24" stroke="var(--owl)" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path d="M40 93 l-3 5 M45 94 l0 5 M55 94 l0 5 M60 93 l3 5" stroke="var(--beak)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    <div style="display:grid;gap:8px;min-width:0">
+      <div class="bubble" id="bubble">Hi Rodina! I’m <b>Hoot</b>. Ready to read? Tap me for a joke!</div>
+      <div class="scores">
+        <span class="score" title="Stars earned">⭐ <span id="starTotal">0</span></span>
+        <span class="score" title="Days in a row">🔥 <span><span id="streak">0</span> day<span id="streakS">s</span></span></span>
+        <span class="score" title="Today’s goal: pass 2 parts"><span>Today <span id="goalTxt">0/2</span></span> <span class="goalbar"><i id="goalBar"></i></span></span>
+      </div>
+    </div>
+  </section>
+
   <div class="warnbox" id="noSR" hidden><p><b>This browser can’t listen.</b> Use <b>Chrome</b> on an Android phone or tablet, <b>Safari</b> on an iPad, or <b>Chrome</b> or <b>Edge</b> on a computer. You can still tap words to mark mistakes by hand.</p></div>
 
   <nav class="tabs" role="tablist">
     <button role="tab" id="tabRead" aria-selected="true">Read</button>
     <button role="tab" id="tabLessons" aria-selected="false">Lessons</button>
     <button role="tab" id="tabWords" aria-selected="false">Tricky words <span class="count" id="trickyCount" hidden></span></button>
+    <button role="tab" id="tabStick" aria-selected="false">Stickers <span class="count" id="stickCount" style="background:var(--warn-soft);color:var(--warn)">0</span></button>
     <button role="tab" id="tabProg" aria-selected="false">Progress</button>
   </nav>
 
@@ -207,13 +272,14 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         </div>
       </div>
       <div class="lamps"><div class="row" id="lamps" aria-hidden="true"></div><small id="errText">0 mistakes</small></div>
+      <div class="trip" aria-hidden="true"><div class="track"><i id="tripFill"></i></div><span class="planet">🪐</span><span class="rocket" id="rocket">🚀</span></div>
       <div class="status" id="status"><span class="mic"></span><span id="statusText">Press <b>Start reading</b>, then Rodina reads out loud.</span><span class="heard" id="heard"></span></div>
       <div class="controls">
         <button class="btn primary" id="startBtn" type="button">Start reading</button>
         <button class="btn" id="doneBtn" type="button" disabled>Finished</button>
         <button class="btn small" id="modelBtn" type="button">Hear it read first</button>
         <button class="btn small" id="undoBtn" type="button" disabled>Undo last mark</button>
-        <button class="btn small" id="resumeMic" type="button" hidden>Tap to keep listening</button>
+        <button class="btn primary bigtap" id="resumeMic" type="button" hidden>🎤 Tap to keep reading</button>
       </div>
     </section>
 
@@ -259,6 +325,16 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
     <div id="practiceBox2" hidden></div>
   </section>
 
+  <!-- STICKERS -->
+  <section id="viewStick" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Sticker book</h2>
+      <p class="hint" style="margin:0">Finish every part of a lesson to win its sticker. Can you collect all of them?</p>
+      <div class="stickergrid" id="stickerGrid"></div>
+    </div>
+  </section>
+  <canvas id="confetti" hidden></canvas>
+
   <!-- PROGRESS -->
   <section id="viewProg" hidden style="display:grid;gap:16px">
     <div class="panel">
@@ -288,7 +364,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <button class="btn" id="folderBtn" type="button">Save records to a folder…</button>
         <span class="hint" id="folderState"></span>
       </div>
-      <p class="hint" style="opacity:.7">App version: 7 Oct 2026 · 12:50</p>
+      <p class="hint" style="opacity:.7">App version: 7 Oct 2026 · 15:00 (Hoot)</p>
       <p class="hint">Records stay in this browser on this device. Use <b>Send progress</b> to share them by Messages, Mail or AirDrop.</p>
     </div>
   </section>
@@ -400,10 +476,11 @@ function speak(text,rate){return new Promise(res=>{
 
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const IS_ANDROID=/Android/i.test(navigator.userAgent);
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
 let L="26",cur=0;
 let tokens=[],units=[],st=newState(),view=[];
 let manual=new Map(),history=[];
-let muteUntil=0,recSess=0;const tainted=new Set();
+let muteUntil=0,recSess=0,recOk=false;const tainted=new Set();
 let running=false,elapsed=0,t0=0,tick=null,teacherTalking=false,listening=false,rec=null,wake=null,ended=false,heardAny=false,deafTimer=null;
 
 const P=()=>LESSONS[L].parts[cur];
@@ -473,7 +550,7 @@ function wordStatus(stt){const res=new Array(tokens.length).fill(null);const hea
 const cleanWord=t=>t.replace(/[^\w’'-]/g,"").replace(/^[’']+|[’']+$/g,"");
 function mistakes(){const {res,heard}=wordStatus(st);const out=[];res.forEach((s,d)=>{if(s==="err")out.push({d,word:cleanWord(tokens[d]),heard:heard[d]})});return out}
 function paint(previewState){
-  const s=previewState||st;const {res}=wordStatus(s);
+  const s=previewState||st;const {res}=wordStatus(s);moveRocket(s.pos);
   const curD=units[s.pos]?units[s.pos].d:-1;
   view.forEach((el,d)=>{el.classList.toggle("done",res[d]==="ok");el.classList.toggle("err",res[d]==="err");el.classList.toggle("cur",(running||listening)&&d===curD)});
   if(running&&curD>=0&&view[curD]){const r=view[curD].getBoundingClientRect();const top=$("booth").getBoundingClientRect().bottom;
@@ -492,7 +569,7 @@ function renderBooth(){
   const sb=$("startBtn");sb.textContent=running?"Pause":(elapsed>0?"Keep reading":"Start reading");sb.className="btn "+(running?"stop":"primary");
   $("doneBtn").disabled=elapsed===0&&!running;$("undoBtn").disabled=history.length===0;
 }
-function renderAll(){renderHeader();renderLessons();renderParts();renderText();paint();renderWords();renderTries()}
+function renderAll(){renderHeader();renderLessons();renderParts();renderText();paint();renderWords();renderTries();renderFun()}
 function setStatus(html){$("statusText").innerHTML=html}
 
 function tapWord(d){
@@ -504,7 +581,8 @@ function tapWord(d){
 function startRec(){
   if(!SR)return;
   rec=new SR();rec.lang="en-US";rec.continuous=!IS_ANDROID;rec.interimResults=true;rec.maxAlternatives=3;
-  const me=rec;recSess++;
+  const me=rec;recSess++;recOk=false;
+  rec.onstart=()=>{if(me===rec)recOk=true};
   rec.onresult=e=>{
     if(me!==rec)return;
     const muted=teacherTalking||Date.now()<muteUntil;   // the mic is hearing the teacher, not Rodina
@@ -527,30 +605,41 @@ function startRec(){
   };
   rec.onerror=e=>{if(me!==rec)return;const er=e.error;
     if(er==="no-speech"||er==="aborted")return;
-    if(er==="not-allowed"&&listening&&elapsed>0){listening=false;$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.");return}
+    if((er==="not-allowed"||er==="service-not-allowed")&&recOk&&running){needTap();return}   // was listening, got cut off
     if(er==="not-allowed"||er==="service-not-allowed"||er==="audio-capture"){listening=false;pause();store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus(micErrorText(er));$("micMsg").innerHTML=micErrorText(er);return}
     if(er==="network"){setStatus("The listening service needs an internet connection.");return}
     setStatus("Listening problem ("+er+"). Press <b>Start reading</b> to try again.")};
-  rec.onend=()=>{if(me===rec&&listening&&running){setTimeout(()=>{if(me!==rec||!listening||!running)return;try{recSess++;rec.start()}catch(_){$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.")}},IS_ANDROID?40:200)}};
-  try{rec.start();listening=true;$("resumeMic").hidden=true}catch(_){$("resumeMic").hidden=false}
+  rec.onend=()=>{if(me===rec&&listening&&running){setTimeout(()=>{if(me!==rec||!listening||!running)return;try{recSess++;rec.start()}catch(_){needTap()}},IS_ANDROID?40:200)}};
+  try{rec.start();listening=true;$("resumeMic").hidden=true}catch(_){needTap()}
+}
+function needTap(){   // the browser needs a new tap before it will listen again (iPad/iPhone)
+  if(!running)return;
+  listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null;
+  pauseClock();$("resumeMic").hidden=false;
+  setStatus(teacherTalking?"Teacher is talking…":"Tap the big button and keep reading.");renderBooth();
 }
 function stopRec(){listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null}
 function onEvents(ev){
   const errs=ev.filter(e=>e.type==="err").map(e=>units[e.i]).filter(u=>!u.num);
   if(!errs.length)return;
   const words=[...new Set(errs.map(u=>cleanWord(tokens[u.d])))];
+  hoot("oops",pick(OOPS));
   if(settings.mode==="now")correctNow(words,errs.map(u=>u.d));
 }
 async function correctNow(words,ds){
   if(teacherTalking)return;
-  teacherTalking=true;pauseClock();
+  teacherTalking=true;pauseClock();if(IS_IOS){listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null}
   ds.forEach(d=>view[d]&&view[d].classList.add("say"));
   setStatus(`Teacher: the word is <b>${words.join(", ")}</b>`);renderBooth();
   const line=words.length===1?`Careful. This word is: ${words[0]}. Say it with me: ${words[0]}.`:`Careful. These words are: ${words.join(", ")}.`;
   await speak(line);await speak("Now keep going.");
   ds.forEach(d=>view[d]&&view[d].classList.remove("say"));
   muteUntil=Date.now()+350;teacherTalking=false;
-  if(running){resumeClock();setStatus("Listening… keep reading.");if(SR&&!listening)startRec()}
+  if(running){
+    if(listening){resumeClock();setStatus("Listening… keep reading.")}
+    else if(IS_IOS||!$("resumeMic").hidden)needTap();
+    else{startRec();if(listening){resumeClock();setStatus("Listening… keep reading.")}}
+  }
   renderBooth();
 }
 
@@ -558,14 +647,15 @@ async function correctNow(words,ds){
 function resumeClock(){t0=performance.now()-elapsed*1000;clearInterval(tick);tick=setInterval(()=>{elapsed=(performance.now()-t0)/1000;renderBooth()},250)}
 function pauseClock(){if(tick)elapsed=(performance.now()-t0)/1000;clearInterval(tick);tick=null}
 async function startReading(){
+  hoot("cheer",elapsed>0?pick(KEEP):pick(CHEERS));
   $("resultBox").hidden=true;$("practiceBox").hidden=true;ended=false;running=true;
   if(SR&&!listening){teacherTalking=true;startRec()}   // must start inside the tap on iPad/iPhone
   if("wakeLock" in navigator)navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{});
-  if(elapsed===0&&running){setStatus("Teacher is talking…");teacherTalking=true;renderBooth();await speak("Ready? Start reading when you see the blue box.")}
+  if(elapsed===0&&running&&!(IS_IOS&&SR)){setStatus("Teacher is talking…");teacherTalking=true;renderBooth();await speak("Ready? Start reading when you see the blue box.")}
   muteUntil=Date.now()+350;teacherTalking=false;
   if(!running)return;
   resumeClock();
-  if(SR){if(!listening)startRec();if(listening)setStatus("Listening… start reading out loud.")}else setStatus("Timing. Tap any word she reads wrong.");
+  if(SR){if(!listening&&$("resumeMic").hidden)startRec();if(listening)setStatus("Listening… start reading out loud.");else if(!$("resumeMic").hidden){pauseClock();renderBooth()}}else setStatus("Timing. Tap any word she reads wrong.");
   clearTimeout(deafTimer);deafTimer=setTimeout(()=>{if(running&&!heardAny)$("deafBox").hidden=false},10000);
   paint();
 }
@@ -602,9 +692,16 @@ async function finish(fromClick,grownup){
   saveDB();
   const lastPart=cur===LESSONS[L].parts.length-1;
   const nextLesson=ORDER[ORDER.indexOf(L)+1];
+  const stars=starsFor(DB.tries[DB.tries.length-1]);
+  const newSticker=pass&&lessonDone(L)&&DB.tries.filter(r=>r.lesson===L&&r.pass&&r.part===cur).length===1&&lastPart;
+  const goalNow=pass&&passedToday()===DAILY_GOAL;
   const why=[];if(!readAll)why.push("she didn’t finish the part");if(!okErr)why.push(`${n} mistakes (the most allowed is ${MAX_ERR})`);if(!okTime)why.push(`${fmt(secs)}, over the ${fmt(lim)} limit`);
   const box=$("resultBox");box.hidden=false;box.className="result "+(pass?"pass":"fail");
-  box.innerHTML=`<h3>${pass?(lastPart?"Lesson complete! Great reading.":"Passed! Great reading."):"Let’s read this part again."}</h3>
+  box.innerHTML=`${pass?`<div class="starsrow" aria-label="${stars} of 3 stars">${[1,2,3].map(i=>`<span class="${i<=stars?"":"off"}">⭐</span>`).join("")}</div>`:""}
+   <h3>${pass?(lastPart?"Lesson complete! Great reading.":"Passed! Great reading."):"Let’s read this part again."}</h3>
+   ${newSticker?`<div class="newsticker"><span class="big">${stickerFor(L)}</span><div><b>New sticker!</b><br>Lesson ${L} is in your sticker book.</div></div>`:""}
+   ${goalNow?`<p><b>🎯 Today’s goal done!</b> 2 parts passed today.</p>`:""}
+   ${pass&&stars<3?`<p class="hint" style="margin:0">Read it with ${stars===2?"no":"1 or no"} mistakes for ${stars===2?"3 stars":"more stars"}.</p>`:""}
    <p>${pass?`${fmt(secs)} with ${n} mistake${n===1?"":"s"}.`:"Reason: "+why.join(" and ")+"."}</p>
    ${pass?"":`<p>The next part opens when she passes this one.</p>`}
    ${ms.length?`<p>Words to practice:</p><div class="missed">${ms.map(m=>`<span><b>${m.word}</b>${m.heard?` <i>she said “${m.heard}”</i>`:" <i>skipped</i>"}</span>`).join("")}</div>`:""}
@@ -620,7 +717,9 @@ async function finish(fromClick,grownup){
   const pb=$("pracBtn");if(pb)pb.onclick=()=>practice(ms.map(m=>m.word.replace(/[’']s$/,"")),$("practiceBox"));
   if(pass&&lastPart)$("questions").open=true;
   setStatus(pass?"Done!":"Let’s try again.");$("heard").textContent="";
-  paint();renderParts();renderLessons();renderWords();renderTries();
+  paint();renderParts();renderLessons();renderWords();renderTries();renderFun();
+  if(pass){moveRocket(units.length);hoot("party",newSticker?`You won the <b>${stickerFor(L)}</b> sticker!`:pick(PASS_LINES));chime(stars===3||newSticker);if(stars===3||lastPart||goalNow)confetti()}
+  else hoot("think",pick(TRY_AGAIN));
   box.scrollIntoView({behavior:"smooth",block:"nearest"});
   const msg=pass?(lastPart?`Wonderful, Rodina! You finished the whole lesson.`:`Great job, Rodina! You passed with ${n} mistake${n===1?"":"s"}.`):(!readAll?"Let's finish the whole part next time.":!okErr?`You had ${n} mistakes. Let's practice the hard words and read it again.`:`Good reading, but a little slow. Let's try again a bit faster.`);
   await speak(msg);
@@ -642,23 +741,30 @@ async function modelRead(){
 }
 
 /* ---------- word practice ---------- */
-let pEar=null,pWait=null,pDead=false,pSess=0;const pTaint=new Set();
+let pEar=null,pWait=null,pDead=false,pSess=0,pTapUI=null;const pTaint=new Set();
 function pEarStart(){
   if(!SR||pEar)return;pDead=false;const r=new SR();r.lang="en-US";r.continuous=!IS_ANDROID;r.interimResults=true;r.maxAlternatives=5;pEar=r;pSess++;
   r.onresult=e=>{if(pEar!==r)return;for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];const k=pSess+":"+i;
     if(!pWait){pTaint.add(k);continue}if(pTaint.has(k)||!res.isFinal)continue;
     const alts=[];for(let a=0;a<res.length;a++)alts.push(res[a].transcript);const w=pWait;pWait=null;w(alts)}};
-  r.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){pDead=true;if(pWait){const w=pWait;pWait=null;w([])}}};
-  r.onend=()=>{if(pEar===r&&!pDead)setTimeout(()=>{if(pEar!==r)return;try{pSess++;r.start()}catch(_){pDead=true}},IS_ANDROID?40:200)};
+  r.onerror=e=>{if(pEar!==r)return;if(e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="audio-capture"){pDead=true;if(pTapUI)pTapUI()}};
+  r.onend=()=>{if(pEar===r&&!pDead)setTimeout(()=>{if(pEar!==r)return;try{pSess++;r.start()}catch(_){pDead=true;if(pTapUI)pTapUI()}},IS_ANDROID?40:200)};
   try{r.start()}catch(_){pDead=true}
 }
 function pEarStop(){const r=pEar;pEar=null;pWait=null;if(r){try{r.onend=null;r.abort()}catch(_){}}}
-function listenOnce(){return new Promise(res=>{if(!SR)return res([]);if(!pEar)pEarStart();if(pDead)return res([]);
-  let done=false;const fin=a=>{if(done)return;done=true;if(pWait===fin)pWait=null;res(a)};setTimeout(()=>{if(!done)pWait=fin},300);setTimeout(()=>fin([]),6300)})}
+function listenOnce(showTap){return new Promise(res=>{if(!SR)return res([]);
+  let done=false,t1=null,t2=null,taps=0;
+  const fin=a=>{if(done)return;done=true;clearTimeout(t1);clearTimeout(t2);if(pWait===fin)pWait=null;pTapUI=null;res(a)};
+  const arm=()=>{clearTimeout(t1);clearTimeout(t2);t1=setTimeout(()=>{if(!done)pWait=fin},300);t2=setTimeout(()=>fin([]),6300)};
+  pTapUI=()=>{if(done)return;clearTimeout(t1);clearTimeout(t2);pWait=null;
+    if(!showTap||taps>=3)return fin([]);
+    showTap(()=>{taps++;pEarStart();if(pDead)return fin([]);arm()})};
+  if(!pEar||pDead)pTapUI();else arm();
+})}
 function heardMatches(alts,word){const w=norm(word);return alts.some(a=>a.split(/\s+/).map(norm).some(h=>h===w||similar(h,w)||(w.endsWith("s")&&h===w.slice(0,-1))))}
 async function practice(words,box){
   words=[...new Set(words.filter(Boolean))];if(!words.length)return;
-  stopRec();pEarStart();   // start the mic inside the tap (iPad/iPhone need this)
+  stopRec();if(!IS_IOS)pEarStart();   // start the mic inside the tap; on iPad each word gets its own tap
   box.hidden=false;let i=0,stopped=false;
   const draw=(w,sub,cls)=>{box.innerHTML=`<div class="practice"><div class="sub">Word ${Math.min(i+1,words.length)} of ${words.length}</div><div class="big ${cls||""}">${w}</div><div class="sub">${sub}</div><div class="row-actions"><button class="btn small" id="pHear" type="button">Hear it</button><button class="btn small" id="pStop" type="button">Stop practice</button></div></div>`;
     $("pHear").onclick=()=>speak(w,0.75);$("pStop").onclick=()=>{stopped=true;box.hidden=true;pEarStop();speechSynthesis.cancel()}};
@@ -666,11 +772,14 @@ async function practice(words,box){
   for(;i<words.length&&!stopped;i++){const w=words[i];let right=false;
     for(let attempt=0;attempt<2&&!stopped&&!right;attempt++){
       draw(w,attempt?"Listen, then try again.":"Listen, then say it.");
+      if(IS_IOS)pEarStop();   // the teacher's voice would cut off the mic on iPad
       await speak(attempt?`Listen: ${w}. Now you say it.`:`Say this word: ${w}.`,0.8);if(stopped)break;
       draw(w,SR?"Listening…":"Say it out loud.");
-      const alts=await listenOnce();if(stopped)break;
+      const alts=await listenOnce(go=>{if(stopped)return;draw(w,"Tap the button, then say the word.");
+        const b=document.createElement("button");b.className="btn primary bigtap";b.type="button";b.textContent="🎤 Tap, then say it";
+        b.onclick=()=>{b.remove();draw(w,"Listening…");go()};box.querySelector(".practice").appendChild(b)});if(stopped)break;
       right=SR?heardMatches(alts,w):true;
-      draw(w,right?"Yes! That’s right.":`I heard “${alts[0]||"nothing"}”.`,right?"ok":"no");
+      draw(w,right?"Yes! That’s right.":`I heard “${alts[0]||"nothing"}”.`,right?"ok":"no");if(right){chime(false);hoot("cheer",pick(PASS_LINES))}
       await speak(right?["Great!","Yes, that's right!","Well done!"][i%3]:"Not quite.");
     }
     const k=w.toLowerCase();const r_=DB.words[k];
@@ -747,13 +856,74 @@ async function saveToFolder(ask){if(!dirHandle)return;try{
   $("folderState").textContent=`Saved to “${dirHandle.name}” at ${new Date().toLocaleTimeString()}.`}catch(e){$("folderState").textContent="Couldn’t save to the folder: "+e.message}}
 
 /* ---------- wiring ---------- */
-const tabs={tabRead:"viewRead",tabLessons:"viewLessons",tabWords:"viewWords",tabProg:"viewProg"};
+const tabs={tabRead:"viewRead",tabLessons:"viewLessons",tabWords:"viewWords",tabStick:"viewStick",tabProg:"viewProg"};
 function showTab(t){Object.keys(tabs).forEach(o=>{$(o).setAttribute("aria-selected",o===t);$(tabs[o]).hidden=o!==t;$(tabs[o]).style.display=o===t?"grid":"none"})}
+
+/* ================= FUN: Hoot, rocket, stars, stickers, streak, confetti ================= */
+const STICKERS=["🦄","🐉","🦊","🐼","🦁","🐙","🦋","🐢","🦉","🐬","🦕","🐝","🦜","🐨","🐧","🦒","🐸","🦔","🐳","🦩","🐯","🐞","🦀","🐿️","🌈","🚀","🏰","🎈","🍩","⭐"];
+const stickerFor=l=>STICKERS[(ORDER.indexOf(l)+STICKERS.length)%STICKERS.length];
+const starsFor=r=>!r.pass?0:r.errors===0?3:r.errors===1?2:1;
+function bestStars(){const best={};DB.tries.forEach(r=>{const k=r.lesson+":"+r.part;best[k]=Math.max(best[k]||0,starsFor(r))});return best}
+const totalStars=()=>Object.values(bestStars()).reduce((a,b)=>a+b,0);
+const dayKey=d=>{const x=new Date(d);return x.getFullYear()+"-"+(x.getMonth()+1)+"-"+x.getDate()};
+function streakDays(){const days=new Set(DB.tries.filter(r=>r.pass).map(r=>dayKey(r.date)));let n=0;const d=new Date();
+  if(!days.has(dayKey(d)))d.setDate(d.getDate()-1);
+  while(days.has(dayKey(d))){n++;d.setDate(d.getDate()-1)}return n}
+const DAILY_GOAL=2;
+const passedToday=()=>DB.tries.filter(r=>r.pass&&dayKey(r.date)===dayKey(Date.now())).length;
+function renderFun(){
+  $("starTotal").textContent=totalStars();
+  const s=streakDays();$("streak").textContent=s;$("streakS").textContent=s===1?"":"s";
+  const g=Math.min(DAILY_GOAL,passedToday());$("goalTxt").textContent=g+"/"+DAILY_GOAL;$("goalBar").style.width=(g/DAILY_GOAL*100)+"%";
+  const got=ORDER.filter(lessonDone);$("stickCount").textContent=got.length;
+  $("stickerGrid").innerHTML=ORDER.map(l=>{const has=lessonDone(l);
+    return `<div class="sticker ${has?"got":"locked"}"><span class="e">${has?stickerFor(l):"❔"}</span><small>Lesson ${l}</small>${has?"":`<small>${lessonPassedCount(l)} of ${LESSONS[l].parts.length} parts</small>`}</div>`}).join("");
+}
+/* Hoot */
+let hootTimer=null;
+function hoot(mood,html,say){const o=$("owl");o.classList.remove("cheer","party","oops","think");void o.getBoundingClientRect();if(mood)o.classList.add(mood);
+  $("bubble").innerHTML=html;if(say)speak(say)}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const CHEERS=["You can do it! Start at the blue box.","Rocket ready! Read out loud and watch it fly.","I’m all ears… well, all feathers!","Let’s go! Nice and clear."];
+const KEEP=["Keep going, you’re flying!","Super reading!","The rocket is zooming!","Wow, look at you go!"];
+const OOPS=["Oops! Tricky word. You’ve got this.","Hoo-hoo, that one’s sneaky!","Almost! Listen and try it again."];
+const PASS_LINES=["Hoo-ray! You did it!","Owl-standing reading!","Fantastic! Give me a wing-five!","You’re a reading superstar!"];
+const TRY_AGAIN=["Almost there! Let’s try once more.","Good try! Practice makes perfect.","You’re getting better every time!"];
+const JOKES=[["Why did the owl invite friends over?","Because he didn’t want to be owl by himself!"],
+ ["What do you call a sleeping dinosaur?","A dino-snore!"],["Why did the book join the police?","It wanted to go under cover!"],
+ ["What do owls say on Halloween?","Happy Owl-ween!"],["Why can’t you trust an atom?","Because they make up everything!"],
+ ["What did one wall say to the other?","Meet you at the corner!"],["Why did the cookie go to the doctor?","Because it felt crummy!"],
+ ["What has words but never talks?","A book!"],["Why are fish so smart?","Because they live in schools!"],
+ ["What do you call a bear with no teeth?","A gummy bear!"]];
+let jokeI=Math.floor(Math.random()*JOKES.length);
+function tellJoke(){if(running)return;const [q,a]=JOKES[jokeI++%JOKES.length];
+  hoot("cheer",`${q}<br><b>${a}</b>`);speak(q+" "+a)}
+function lookAt(pct){const dx=(pct-0.5)*6;$("pupL").setAttribute("cx",37+dx);$("pupR").setAttribute("cx",63+dx)}
+/* rocket */
+function moveRocket(pos){const pct=units.length?Math.min(1,pos/units.length):0;$("tripFill").style.width=(pct*100)+"%";$("rocket").style.left=`calc(${pct*100}% - ${pct*24}px + 12px)`;lookAt(pct)}
+/* chime: tiny tune made in the browser (no files) */
+let actx=null;
+function audio(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx}catch(e){return null}}
+function chime(big){const a=audio();if(!a)return;const notes=big?[523,659,784,1047,1319]:[523,659,784];
+  notes.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.type="triangle";o.frequency.value=f;
+    const t=a.currentTime+i*.12;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+.35);
+    o.connect(g).connect(a.destination);o.start(t);o.stop(t+.4)})}
+/* confetti */
+function confetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const c=$("confetti");c.hidden=false;
+  const ctx=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;const cs=getComputedStyle(document.documentElement);
+  const cols=["--steel","--ok","--gold","--err","--beak"].map(v=>cs.getPropertyValue(v).trim()||"#e8a400");
+  const ps=Array.from({length:140},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:8+Math.random()*8,c:pick(cols)}));
+  const t0=performance.now();(function f(t){ctx.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.r+=p.vr;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore()});
+    if(t-t0<3200)requestAnimationFrame(f);else{ctx.clearRect(0,0,c.width,c.height);c.hidden=true}})(t0)}
+/* ---------- iPad: speech must be unlocked by a tap ---------- */
+let ttsUnlocked=false;
+addEventListener("pointerdown",()=>{if(ttsUnlocked||running||!("speechSynthesis" in window))return;ttsUnlocked=true;
+  try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}audio()},true);
 /* ---------- microphone setup ---------- */
 const SITE_URL="https://zeriab2020.github.io/rodina-reads/";
 const SITE_MSG=`<b>This link can’t use the microphone.</b> Open Rodina’s reading website instead: <a href="${SITE_URL}" target="_blank" rel="noopener">${SITE_URL.replace("https://","")}</a>`;
 function micBlockedByPage(){try{const fp=document.permissionsPolicy||document.featurePolicy;return !!(fp&&fp.allowsFeature&&!fp.allowsFeature("microphone"))}catch(e){return false}}
-const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
 function micErrorText(er){
   if(er==="service-not-allowed"&&IS_IOS)return "<b>Dictation is turned off on this iPad.</b> The teacher needs it to listen. Open <b>Settings › General › Keyboard</b>, turn on <b>Enable Dictation</b>, then come back and reload this page.";
   if(er==="service-not-allowed")return "<b>Speech recognition is turned off in this browser.</b> Use Safari on an iPad, or Chrome on Android or a computer.";
@@ -787,10 +957,11 @@ function wire(){
   $("doneBtn").onclick=()=>finish(true);
   $("modelBtn").onclick=modelRead;
   $("undoBtn").onclick=()=>{const d=history.pop();if(d===undefined)return;manual.delete(d);paint()};
-  $("resumeMic").onclick=()=>{$("resumeMic").hidden=true;setStatus("Listening… keep reading.");startRec()};
+  $("resumeMic").onclick=()=>{$("resumeMic").hidden=true;if(!running)return;startRec();if(listening){muteUntil=Date.now()+250;resumeClock();setStatus("Listening… keep reading.")}paint()};
   const lim=d=>{settings.limits[key()]=Math.min(600,Math.max(60,limitOf()+d));saveSettings();renderBooth();const m=$("limMeta");if(m)m.textContent=`Time limit ${fmt(limitOf())}`};
   $("limUp").onclick=()=>lim(15);$("limDown").onclick=()=>lim(-15);
   $("chooseBtn").onclick=()=>showTab("tabLessons");
+  $("owl").onclick=tellJoke;$("owl").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tellJoke()}};
   Object.keys(tabs).forEach(t=>$(t).onclick=()=>showTab(t));
   showTab("tabRead");
   $("practiceAllBtn").onclick=()=>{const list=Object.values(DB.words).filter(w=>(w.ok||0)<2).sort((a,b)=>b.missed-a.missed).slice(0,12).map(w=>w.word);
