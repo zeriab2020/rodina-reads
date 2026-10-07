@@ -402,6 +402,7 @@ const IS_ANDROID=/Android/i.test(navigator.userAgent);
 let L="26",cur=0;
 let tokens=[],units=[],st=newState(),view=[];
 let manual=new Map(),history=[];
+let muteUntil=0,recSess=0;const tainted=new Set();
 let running=false,elapsed=0,t0=0,tick=null,teacherTalking=false,listening=false,rec=null,wake=null,ended=false,heardAny=false,deafTimer=null;
 
 const P=()=>LESSONS[L].parts[cur];
@@ -502,10 +503,15 @@ function tapWord(d){
 function startRec(){
   if(!SR)return;
   rec=new SR();rec.lang="en-US";rec.continuous=!IS_ANDROID;rec.interimResults=true;rec.maxAlternatives=3;
+  const me=rec;recSess++;
   rec.onresult=e=>{
-    heardAny=true;$("deafBox").hidden=true;
-    let interim="";
-    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];
+    if(me!==rec)return;
+    const muted=teacherTalking||Date.now()<muteUntil;   // the mic is hearing the teacher, not Rodina
+    let interim="",fresh=false;
+    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];const k=recSess+":"+i;
+      if(muted){tainted.add(k);continue}
+      if(tainted.has(k))continue;               // a phrase that began while the teacher was talking
+      fresh=true;
       if(r.isFinal){
         let best=r[0].transcript,bs=-1e9;for(let a=0;a<r.length;a++){const sc=scoreAlt(units,st,r[a].transcript);if(sc>bs){bs=sc;best=r[a].transcript}}
         const ev=feedText(units,st,best);
@@ -513,14 +519,16 @@ function startRec(){
         onEvents(ev);
       }else interim+=r[0].transcript;
     }
+    if(!fresh)return;
+    heardAny=true;$("deafBox").hidden=true;
     if(interim){const c=cloneState(st);feedText(units,c,interim);paint(c);$("heard").textContent="“"+interim.trim()+"”"}else paint();
     if(st.pos>=units.length&&!ended){ended=true;setTimeout(()=>finish(),600)}
   };
-  rec.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+  rec.onerror=e=>{if(me!==rec)return;if(e.error==="not-allowed"||e.error==="service-not-allowed"){
       if(listening&&elapsed>0){listening=false;$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.");}
       else{listening=false;pause();store.set("rodina.micok",false);$("micCard").hidden=false;$("micBtn").hidden=false;setStatus("<b>The microphone is blocked.</b> Allow the microphone for this page (Android Chrome: tap the icon left of the address bar › Permissions › Microphone › Allow. iPad: Settings › Apps › Safari › Microphone › Allow), then press Start reading again.")}}
     else if(e.error==="network"){setStatus("The listening service needs an internet connection.")}};
-  rec.onend=()=>{if(listening&&!teacherTalking&&running){setTimeout(()=>{try{rec.start()}catch(_){$("resumeMic").hidden=false}},IS_ANDROID?40:200)}};
+  rec.onend=()=>{if(me===rec&&listening&&running){setTimeout(()=>{if(me!==rec||!listening||!running)return;try{recSess++;rec.start()}catch(_){$("resumeMic").hidden=false;setStatus("Listening stopped. Tap <b>Tap to keep listening</b>.")}},IS_ANDROID?40:200)}};
   try{rec.start();listening=true;$("resumeMic").hidden=true}catch(_){$("resumeMic").hidden=false}
 }
 function stopRec(){listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null}
@@ -532,14 +540,14 @@ function onEvents(ev){
 }
 async function correctNow(words,ds){
   if(teacherTalking)return;
-  teacherTalking=true;stopRec();pauseClock();
+  teacherTalking=true;pauseClock();
   ds.forEach(d=>view[d]&&view[d].classList.add("say"));
   setStatus(`Teacher: the word is <b>${words.join(", ")}</b>`);renderBooth();
   const line=words.length===1?`Careful. This word is: ${words[0]}. Say it with me: ${words[0]}.`:`Careful. These words are: ${words.join(", ")}.`;
   await speak(line);await speak("Now keep going.");
   ds.forEach(d=>view[d]&&view[d].classList.remove("say"));
-  teacherTalking=false;
-  if(running){resumeClock();setStatus("Listening… keep reading.");startRec()}
+  muteUntil=Date.now()+350;teacherTalking=false;
+  if(running){resumeClock();setStatus("Listening… keep reading.");if(SR&&!listening)startRec()}
   renderBooth();
 }
 
@@ -548,11 +556,13 @@ function resumeClock(){t0=performance.now()-elapsed*1000;clearInterval(tick);tic
 function pauseClock(){if(tick)elapsed=(performance.now()-t0)/1000;clearInterval(tick);tick=null}
 async function startReading(){
   $("resultBox").hidden=true;$("practiceBox").hidden=true;ended=false;running=true;
+  if(SR&&!listening){teacherTalking=true;startRec()}   // must start inside the tap on iPad/iPhone
   if("wakeLock" in navigator)navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{});
-  if(elapsed===0){setStatus("Teacher is talking…");teacherTalking=true;renderBooth();await speak("Ready? Start reading when you see the blue box.");teacherTalking=false}
+  if(elapsed===0&&running){setStatus("Teacher is talking…");teacherTalking=true;renderBooth();await speak("Ready? Start reading when you see the blue box.")}
+  muteUntil=Date.now()+350;teacherTalking=false;
   if(!running)return;
   resumeClock();
-  if(SR){setStatus("Listening… start reading out loud.");startRec()}else setStatus("Timing. Tap any word she reads wrong.");
+  if(SR){if(!listening)startRec();if(listening)setStatus("Listening… start reading out loud.")}else setStatus("Timing. Tap any word she reads wrong.");
   clearTimeout(deafTimer);deafTimer=setTimeout(()=>{if(running&&!heardAny)$("deafBox").hidden=false},10000);
   paint();
 }
@@ -629,16 +639,26 @@ async function modelRead(){
 }
 
 /* ---------- word practice ---------- */
-function listenOnce(){return new Promise(res=>{if(!SR)return res([]);const r=new SR();r.lang="en-US";r.continuous=false;r.interimResults=false;r.maxAlternatives=5;
-  let got=[];r.onresult=e=>{for(let a=0;a<e.results[0].length;a++)got.push(e.results[0][a].transcript)};
-  r.onerror=()=>{};r.onend=()=>res(got);try{r.start()}catch(_){res([])}
-  setTimeout(()=>{try{r.stop()}catch(_){}} ,6000)})}
+let pEar=null,pWait=null,pDead=false,pSess=0;const pTaint=new Set();
+function pEarStart(){
+  if(!SR||pEar)return;pDead=false;const r=new SR();r.lang="en-US";r.continuous=!IS_ANDROID;r.interimResults=true;r.maxAlternatives=5;pEar=r;pSess++;
+  r.onresult=e=>{if(pEar!==r)return;for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];const k=pSess+":"+i;
+    if(!pWait){pTaint.add(k);continue}if(pTaint.has(k)||!res.isFinal)continue;
+    const alts=[];for(let a=0;a<res.length;a++)alts.push(res[a].transcript);const w=pWait;pWait=null;w(alts)}};
+  r.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){pDead=true;if(pWait){const w=pWait;pWait=null;w([])}}};
+  r.onend=()=>{if(pEar===r&&!pDead)setTimeout(()=>{if(pEar!==r)return;try{pSess++;r.start()}catch(_){pDead=true}},IS_ANDROID?40:200)};
+  try{r.start()}catch(_){pDead=true}
+}
+function pEarStop(){const r=pEar;pEar=null;pWait=null;if(r){try{r.onend=null;r.abort()}catch(_){}}}
+function listenOnce(){return new Promise(res=>{if(!SR)return res([]);if(!pEar)pEarStart();if(pDead)return res([]);
+  let done=false;const fin=a=>{if(done)return;done=true;if(pWait===fin)pWait=null;res(a)};setTimeout(()=>{if(!done)pWait=fin},300);setTimeout(()=>fin([]),6300)})}
 function heardMatches(alts,word){const w=norm(word);return alts.some(a=>a.split(/\s+/).map(norm).some(h=>h===w||similar(h,w)||(w.endsWith("s")&&h===w.slice(0,-1))))}
 async function practice(words,box){
   words=[...new Set(words.filter(Boolean))];if(!words.length)return;
+  stopRec();pEarStart();   // start the mic inside the tap (iPad/iPhone need this)
   box.hidden=false;let i=0,stopped=false;
   const draw=(w,sub,cls)=>{box.innerHTML=`<div class="practice"><div class="sub">Word ${Math.min(i+1,words.length)} of ${words.length}</div><div class="big ${cls||""}">${w}</div><div class="sub">${sub}</div><div class="row-actions"><button class="btn small" id="pHear" type="button">Hear it</button><button class="btn small" id="pStop" type="button">Stop practice</button></div></div>`;
-    $("pHear").onclick=()=>speak(w,0.75);$("pStop").onclick=()=>{stopped=true;box.hidden=true;speechSynthesis.cancel()}};
+    $("pHear").onclick=()=>speak(w,0.75);$("pStop").onclick=()=>{stopped=true;box.hidden=true;pEarStop();speechSynthesis.cancel()}};
   box.scrollIntoView({behavior:"smooth",block:"nearest"});
   for(;i<words.length&&!stopped;i++){const w=words[i];let right=false;
     for(let attempt=0;attempt<2&&!stopped&&!right;attempt++){
@@ -653,7 +673,7 @@ async function practice(words,box){
     const k=w.toLowerCase();const r_=DB.words[k];
     if(r_){if(right)r_.ok=(r_.ok||0)+1;r_.lastPractice=new Date().toISOString();saveDB();renderWords()}
   }
-  saveDB();renderWords();
+  pEarStop();saveDB();renderWords();
   if(!stopped){box.innerHTML=`<div class="practice"><div class="big ok">All done!</div><div class="sub">Words she gets right twice move to “learned”.</div></div>`;await speak("All done. Great practice!")}
 }
 
