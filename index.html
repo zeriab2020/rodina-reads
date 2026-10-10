@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<meta name="apple-mobile-web-app-title" content="Rodina Reads">
+<meta name="apple-mobile-web-app-title" content="Read with Emma">
 <meta name="theme-color" content="#2d5f8f">
-<title>Rodina Reading Teacher</title>
+<title>Read with Emma</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bree+Serif&display=swap">
@@ -195,7 +195,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
 <body>
 <div class="wrap" id="unlock" hidden>
   <form class="unlockbox" id="unlockForm">
-    <div class="eyebrow">Rodina Reading Teacher</div>
+    <div class="eyebrow">Read with Emma</div>
     <h1>Family password</h1>
     <p class="hint" style="margin:0">Type it once. This device will remember it.</p>
     <input id="pw" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" aria-label="Family password">
@@ -228,7 +228,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <path d="M40 93 l-3 5 M45 94 l0 5 M55 94 l0 5 M60 93 l3 5" stroke="var(--beak)" stroke-width="3" stroke-linecap="round"/>
       </svg>
     <div style="display:grid;gap:8px;min-width:0">
-      <div class="bubble" id="bubble">Hi Rodina! I’m <b>Hoot</b>. Ready to read? Tap me for a joke!</div>
+      <div class="bubble" id="bubble">Hi there! I’m <b>Hoot</b>. Ready to read? Tap me for a joke!</div>
       <div class="scores">
         <span class="score" title="Stars earned">⭐ <span id="starTotal">0</span></span>
         <span class="score" title="Days in a row">🔥 <span><span id="streak">0</span> day<span id="streakS">s</span></span></span>
@@ -255,6 +255,13 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
       <p class="sub" id="micMsg" style="margin:0">Tap the button, then choose <b>Allow</b> when the browser asks to use the microphone.</p>
       <div class="row-actions"><button class="btn primary" id="micBtn" type="button">Turn on the microphone</button><button class="btn small" id="micSkip" type="button" hidden>A grown-up will mark mistakes</button></div>
     </div>
+    <form class="practice" id="nameCard" hidden style="justify-items:start;text-align:left">
+      <div class="eyebrow">Welcome to Read with Emma</div>
+      <h2 style="font-size:1.4rem">What’s the reader’s name?</h2>
+      <p class="sub" style="margin:0">Hoot will use it to cheer them on. It stays on this device only.</p>
+      <div class="row-actions"><input id="nameIn" maxlength="30" autocomplete="off" aria-label="Reader’s name" placeholder="First name" style="font:inherit;font-size:1.1rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-width:0;max-width:100%">
+        <button class="btn primary" type="submit">Save</button><button class="btn small" id="nameSkip" type="button">Skip</button></div>
+    </form>
     <div class="rules">
       <span class="chip">Pass: 3 mistakes or fewer</span>
       <span class="chip">Finish within the time on the wheel</span>
@@ -276,7 +283,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
       </div>
       <div class="lamps"><div class="row" id="lamps" aria-hidden="true"></div><small id="errText">0 mistakes</small></div>
       <div class="trip" aria-hidden="true"><div class="track"><i id="tripFill"></i></div><span class="planet">🪐</span><span class="rocket" id="rocket">🚀</span></div>
-      <div class="status" id="status"><span class="mic"></span><span id="statusText">Press <b>Start reading</b>, then Rodina reads out loud.</span><span class="heard" id="heard"></span></div>
+      <div class="status" id="status"><span class="mic"></span><span id="statusText">Press <b>Start reading</b>, then read out loud.</span><span class="heard" id="heard"></span></div>
       <div class="controls">
         <button class="btn primary" id="startBtn" type="button">Start reading</button>
         <button class="btn" id="doneBtn" type="button" disabled>Finished</button>
@@ -316,7 +323,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
   <section id="viewWords" hidden style="display:grid;gap:16px">
     <div class="panel">
       <h2>Tricky words</h2>
-      <p class="hint" style="margin:0">Every word Rodina misread. A word is <b>learned</b> after she says it right in practice 2 times.</p>
+      <p class="hint" style="margin:0">Every word that was misread. A word is <b>learned</b> after she says it right in practice 2 times.</p>
       <div class="row-actions">
         <button class="btn primary" id="practiceAllBtn" type="button">Practice tricky words</button>
         <label class="hint"><input type="checkbox" id="showLearned"> Show learned words</label>
@@ -355,7 +362,8 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
     <div class="panel settings">
       <h2>Teacher settings</h2>
       <div class="line">
-        <label>Teacher voice<select id="voiceSel"></select></label>
+        <label>Teacher voice (American English)<select id="voiceSel"></select></label>
+        <label>Reader’s name<input id="nameSet" maxlength="30" autocomplete="off" style="font:inherit;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px;max-width:100%"></label>
         <label>When she makes a mistake
           <select id="modeSel">
             <option value="para">Mark it red, then say it 3 times at the end of the paragraph</option>
@@ -369,7 +377,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <button class="btn" id="folderBtn" type="button">Save records to a folder…</button>
         <span class="hint" id="folderState"></span>
       </div>
-      <p class="hint" style="opacity:.7">App version: 10 Oct 2026 · 17:00 (paragraph practice)</p>
+      <p class="hint" style="opacity:.7">App version: 10 Oct 2026 · 19:00 (American English)</p>
       <p class="hint">Records stay in this browser on this device. Use <b>Send progress</b> to share them by Messages, Mail or AirDrop.</p>
     </div>
   </section>
@@ -383,7 +391,12 @@ const MAX_ERR = 3;
 /* ================= ALIGNER START ================= */
 const COMMON = new Set("a an the and to of in on at it is was he she they we i you his her as or but for so be by from with that this would were had has".split(" "));
 const NUMWORDS = new Set("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million and oh".split(" "));
-function norm(s){return String(s).toLowerCase().replace(/[’'`]/g,"").replace(/[^a-z0-9]/g,"")}
+const US_WORDS={centre:"center",centres:"centers",theatre:"theater",theatres:"theaters",metre:"meter",metres:"meters",litre:"liter",litres:"liters",fibre:"fiber",grey:"gray",greys:"grays",mum:"mom",mums:"moms",plough:"plow",ploughed:"plowed",tyre:"tire",tyres:"tires",cheque:"check",kerb:"curb",aluminium:"aluminum",aeroplane:"airplane",aeroplanes:"airplanes",jewellery:"jewelry",pyjamas:"pajamas",cosy:"cozy",moustache:"mustache",sceptical:"skeptical",manoeuvre:"maneuver",programme:"program",catalogue:"catalog",dialogue:"dialog",defence:"defense",offence:"offense",licence:"license",practise:"practice",practised:"practiced",learnt:"learned",spelt:"spelled",dreamt:"dreamed",whilst:"while",amongst:"among",towards:"toward",storey:"story",storeys:"stories",draught:"draft",gaol:"jail",colour:"color",favourite:"favorite"};
+function usSpell(w){if(US_WORDS[w])return US_WORDS[w];
+  return w.replace(/^(col|fav|hon|harb|lab|neighb|behavi|flav|hum|rum|vap|arm|parl|sav|splend|clam|od|val|vig|ard|endeav|glam)our(s|ed|ing|ite|ites|ful|less|able)?$/,"$1or$2")
+          .replace(/^(travel|cancel|label|model|signal|quarrel|marvel|jewel|tunnel|level|shovel|duel|fuel|channel|counsel|dial|total|panel|pedal|rival|snorkel|towel|yodel)l(ed|ing|er|ers)$/,"$1$2")
+          .replace(/^(real|recogn|organ|apolog|critic|memor|sympath|emphas|summar|categor|harmon|agon|special|civil|colon|fertil|final|global|hospital|ideal|legal|local|minim|maxim|mobil|modern|neutral|normal|optim|personal|polar|popular|prior|standard|stabil|vapor|vocal|author|capital|character|familiar|general|human|immun|industrial|journal|magnet|natural|patron|plagiar|rational|scrut|terror|theor|tranquil|visual|item|util|vandal|mesmer|hypnot|baptiz|jeopard|fantas|energ|amort|cauter|desens)is(e|es|ed|ing|ation|ations|er|ers)$/,"$1iz$2")}
+function norm(s){return usSpell(String(s).toLowerCase().replace(/[’'`]/g,"").replace(/[^a-z0-9]/g,""))}
 function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
 function similar(heard,exp){
@@ -457,25 +470,32 @@ async function boot(){
 let LESSONS={}, ORDER=[];
 let DB=store.get("rodina.db",{tries:[],words:{}});DB.tries=DB.tries||[];DB.words=DB.words||{};
 let settings=store.get("rodina.settings",{voice:"",mode:"para",modeV2:true,rate:0.9,lesson:"26",part:0,limits:{}});
+if(settings.name===undefined&&store.get("rodina.db",{tries:[]}).tries.length)settings.name="Rodina";   // existing reader keeps her name
 if(!settings.modeV2){settings.mode="para";settings.modeV2=true;store.set("rodina.settings",settings)}
 settings.limits=settings.limits||{};
 const saveDB=()=>{store.set("rodina.db",DB);saveToFolder(false)};
 const saveSettings=()=>store.set("rodina.settings",settings);
+const NM=()=>settings.name?", "+settings.name:"";
+function greet(){$("bubble").innerHTML=`Hi${settings.name?" "+esc(settings.name):" there"}! I’m <b>Hoot</b>. Ready to read? Tap me for a joke!`}
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function saveName(v){settings.name=String(v||"").trim().slice(0,30);saveSettings();$("nameCard").hidden=true;$("nameSet").value=settings.name;greet()}
 
 let voices=[];
-function loadVoices(){voices=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang));
+const isUS=v=>/^en[-_]us$/i.test(v.lang||"");
+function loadVoices(){const all=(speechSynthesis.getVoices()||[]);const us=all.filter(isUS);
+  voices=us.length?us:all.filter(v=>/^en/i.test(v.lang||""));   // American English voices only (any English only if the device has none)
   const sel=$("voiceSel");sel.innerHTML="";
-  const rank=v=>(/natural|online|enhanced|premium/i.test(v.name)?0:/google|samantha|ava|allison|susan/i.test(v.name)?1:2)+(/en-US/i.test(v.lang)?0:.5);
+  const rank=v=>(/natural|online|enhanced|premium/i.test(v.name)?0:/samantha|ava|allison|google us|microsoft (aria|jenny|zira)/i.test(v.name)?1:2)+(isUS(v)?0:5);
   voices.sort((a,b)=>rank(a)-rank(b));
   voices.forEach(v=>{const o=document.createElement("option");o.value=v.name;o.textContent=`${v.name} (${v.lang})`;sel.appendChild(o)});
   if(!voices.length){const o=document.createElement("option");o.textContent="Default voice";sel.appendChild(o)}
-  if(settings.voice&&voices.some(v=>v.name===settings.voice))sel.value=settings.voice;else if(voices[0])settings.voice=voices[0].name;
+  if(settings.voice&&voices.some(v=>v.name===settings.voice))sel.value=settings.voice;else if(voices[0]){settings.voice=voices[0].name;sel.value=voices[0].name;saveSettings()}
 }
 function speak(text,rate){return new Promise(res=>{
   if(!("speechSynthesis" in window))return res();
   let done=false;const fin=()=>{if(!done){done=true;res()}};
   setTimeout(fin,Math.max(4000,text.length*140));
-  let u;try{u=new SpeechSynthesisUtterance(text);const v=voices.find(v=>v.name===settings.voice);if(v){try{u.voice=v}catch(e){}u.lang=v.lang}else u.lang="en-US";
+  let u;try{u=new SpeechSynthesisUtterance(text);const v=voices.find(v=>v.name===settings.voice)||voices[0];u.lang="en-US";if(v&&isUS(v)){try{u.voice=v}catch(e){}}
   u.rate=rate||Number(settings.rate)||0.9;u.pitch=1.05;u.onend=fin;u.onerror=fin;}catch(e){return fin()}
   if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(()=>speechSynthesis.speak(u),120)}else speechSynthesis.speak(u);
 })}
@@ -518,7 +538,7 @@ function start(data){
 
 function renderHeader(){
   const les=LESSONS[L];
-  $("lessonEyebrow").textContent=`Lesson ${L} · ${les.kind}`;$("lessonTitle").textContent=les.title;
+  $("lessonEyebrow").textContent=`Read with Emma · Lesson ${L} · ${les.kind}`;$("lessonTitle").textContent=les.title;
   $("qList").innerHTML=(les.questions||[]).map(q=>`<li>${q}</li>`).join("");
   $("questions").hidden=!(les.questions||[]).length;
 }
@@ -594,7 +614,7 @@ function startRec(){
   rec.onstart=()=>{if(me===rec)recOk=true};
   rec.onresult=e=>{
     if(me!==rec)return;
-    const muted=teacherTalking||Date.now()<muteUntil;   // the mic is hearing the teacher, not Rodina
+    const muted=teacherTalking||Date.now()<muteUntil;   // the mic is hearing the teacher, not the reader
     let interim="",fresh=false;
     for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];const k=recSess+":"+i;
       if(muted){tainted.add(k);continue}
@@ -721,7 +741,7 @@ async function startReading(){
   paint();
 }
 function pause(){running=false;if(reviewing){reviewToken++;reviewing=false;if(pCancel)pCancel([]);pEarStop();$("reviewBox").hidden=true}pauseClock();stopRec();$("resumeMic").hidden=true;if(wake){wake.release().catch(()=>{});wake=null}setStatus("Paused. Press <b>Keep reading</b> to go on.");paint()}
-function resetAttempt(){pause();reviewedParas=new Set();reviewCredit={};clearTimeout(deafTimer);heardAny=false;$("deafBox").hidden=true;elapsed=0;st=newState();manual=new Map();history=[];ended=false;$("resultBox").hidden=true;$("practiceBox").hidden=true;$("heard").textContent="";setStatus("Press <b>Start reading</b>, then Rodina reads out loud.")}
+function resetAttempt(){pause();reviewedParas=new Set();reviewCredit={};clearTimeout(deafTimer);heardAny=false;$("deafBox").hidden=true;elapsed=0;st=newState();manual=new Map();history=[];ended=false;$("resultBox").hidden=true;$("practiceBox").hidden=true;$("heard").textContent="";setStatus("Press <b>Start reading</b>, then read out loud.")}
 
 async function finish(fromClick,grownup){
   if(fromClick)ensureFolderPermission();
@@ -784,7 +804,7 @@ async function finish(fromClick,grownup){
   if(pass){moveRocket(units.length);hoot("party",newSticker?`You won the <b>${stickerFor(L)}</b> sticker!`:pick(PASS_LINES));chime(stars===3||newSticker);if(stars===3||lastPart||goalNow)confetti()}
   else hoot("think",pick(TRY_AGAIN));
   box.scrollIntoView({behavior:"smooth",block:"nearest"});
-  const msg=pass?(lastPart?`Wonderful, Rodina! You finished the whole lesson.`:`Great job, Rodina! You passed with ${n} mistake${n===1?"":"s"}.`):(!readAll?"Let's finish the whole part next time.":!okErr?`You had ${n} mistakes. Let's practice the hard words and read it again.`:`Good reading, but a little slow. Let's try again a bit faster.`);
+  const msg=pass?(lastPart?`Wonderful${NM()}! You finished the whole lesson.`:`Great job${NM()}! You passed with ${n} mistake${n===1?"":"s"}.`):(!readAll?"Let's finish the whole part next time.":!okErr?`You had ${n} mistakes. Let's practice the hard words and read it again.`:`Good reading, but a little slow. Let's try again a bit faster.`);
   await speak(msg);
   if(settings.mode==="end"&&ms.length){await speak("Let's look at the words you missed.");practice(ms.map(m=>m.word.replace(/[’']s$/,"")),$("practiceBox"))}
 }
@@ -882,26 +902,26 @@ function summaryText(){
   const passed=tt.filter(r=>r.pass).length;
   const tricky=Object.values(DB.words).filter(w=>(w.ok||0)<2).sort((a,b)=>b.missed-a.missed).slice(0,10).map(w=>`${w.word} (${w.missed}×)`);
   const lessonsDone=ORDER.filter(lessonDone);
-  return `Rodina's reading — ${new Date().toLocaleDateString()}\nToday: ${tt.length} tries, ${passed} parts passed.\nLessons finished: ${lessonsDone.length?lessonsDone.join(", "):"none yet"}.\nTricky words: ${tricky.join(", ")||"none"}.`;
+  return `${settings.name?settings.name+"'s reading":"Reading progress"} (Read with Emma) — ${new Date().toLocaleDateString()}\nToday: ${tt.length} tries, ${passed} parts passed.\nLessons finished: ${lessonsDone.length?lessonsDone.join(", "):"none yet"}.\nTricky words: ${tricky.join(", ")||"none"}.`;
 }
 async function shareProgress(){
   const text=summaryText();
-  const files=[new File(["﻿"+logCSV()],"rodina-reading-log.csv",{type:"text/csv"}),new File(["﻿"+wordsCSV()],"rodina-tricky-words.csv",{type:"text/csv"})];
+  const files=[new File(["﻿"+logCSV()],"reading-log.csv",{type:"text/csv"}),new File(["﻿"+wordsCSV()],"tricky-words.csv",{type:"text/csv"})];
   try{
-    if(navigator.canShare&&navigator.canShare({files})){await navigator.share({title:"Rodina's reading",text,files});return}
-    if(navigator.share){await navigator.share({title:"Rodina's reading",text});return}
+    if(navigator.canShare&&navigator.canShare({files})){await navigator.share({title:"Read with Emma progress",text,files});return}
+    if(navigator.share){await navigator.share({title:"Read with Emma progress",text});return}
   }catch(e){if(e&&e.name==="AbortError")return}
   downloadCSV();
 }
 async function downloadCSV(){
   let dls=null;try{dls=window.claude&&await window.claude.use("downloads")}catch(e){}
   if(dls){
-    for(const [name,txt] of [["rodina-reading-log.csv",logCSV()],["rodina-tricky-words.csv",wordsCSV()]]){
+    for(const [name,txt] of [["reading-log.csv",logCSV()],["tricky-words.csv",wordsCSV()]]){
       try{await dls.save({filename:name,data:"﻿"+txt})}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){await new Promise(r=>setTimeout(r,1500));try{await dls.save({filename:name,data:"﻿"+txt})}catch(_){}}}
     }
     return}
   const dl=(name,txt)=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+txt],{type:"text/csv"}));a.download=name;a.click()};
-  dl("rodina-reading-log.csv",logCSV());setTimeout(()=>dl("rodina-tricky-words.csv",wordsCSV()),400)}
+  dl("reading-log.csv",logCSV());setTimeout(()=>dl("tricky-words.csv",wordsCSV()),400)}
 
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("rodina-reading",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function idbGet(k){try{const db=await idb();return await new Promise(res=>{const q=db.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})}catch(e){return null}}
@@ -914,8 +934,8 @@ async function ensureFolderPermission(){if(!dirHandle)return;try{if(await dirHan
 async function writeFile(name,text){const fh=await dirHandle.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(text);await w.close()}
 async function saveToFolder(ask){if(!dirHandle)return;try{
   let p=await dirHandle.queryPermission({mode:"readwrite"});if(p!=="granted"&&ask)p=await dirHandle.requestPermission({mode:"readwrite"});
-  if(p!=="granted")return;await writeFile("rodina-reading-log.csv","﻿"+logCSV());await writeFile("rodina-tricky-words.csv","﻿"+wordsCSV());
-  await writeFile("rodina-reading-data.json",JSON.stringify(DB,null,1));
+  if(p!=="granted")return;await writeFile("reading-log.csv","﻿"+logCSV());await writeFile("tricky-words.csv","﻿"+wordsCSV());
+  await writeFile("reading-data.json",JSON.stringify(DB,null,1));
   $("folderState").textContent=`Saved to “${dirHandle.name}” at ${new Date().toLocaleTimeString()}.`}catch(e){$("folderState").textContent="Couldn’t save to the folder: "+e.message}}
 
 /* ---------- wiring ---------- */
@@ -985,7 +1005,7 @@ addEventListener("pointerdown",()=>{if(ttsUnlocked||running||!("speechSynthesis"
   try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}audio()},true);
 /* ---------- microphone setup ---------- */
 const SITE_URL="https://zeriab2020.github.io/rodina-reads/";
-const SITE_MSG=`<b>This link can’t use the microphone.</b> Open Rodina’s reading website instead: <a href="${SITE_URL}" target="_blank" rel="noopener">${SITE_URL.replace("https://","")}</a>`;
+const SITE_MSG=`<b>This link can’t use the microphone.</b> Open the Read with Emma website instead: <a href="${SITE_URL}" target="_blank" rel="noopener">${SITE_URL.replace("https://","")}</a>`;
 function micBlockedByPage(){try{const fp=document.permissionsPolicy||document.featurePolicy;return !!(fp&&fp.allowsFeature&&!fp.allowsFeature("microphone"))}catch(e){return false}}
 function micErrorText(er){
   if(er==="service-not-allowed"&&IS_IOS)return "<b>Dictation is turned off on this iPad.</b> The teacher needs it to listen. Open <b>Settings › General › Keyboard</b>, turn on <b>Enable Dictation</b>, then come back and reload this page.";
@@ -1023,6 +1043,9 @@ function wire(){
   $("resumeMic").onclick=()=>{$("resumeMic").hidden=true;if(!running)return;startRec();if(listening){muteUntil=Date.now()+250;resumeClock();setStatus("Listening… keep reading.")}paint()};
   if(Object.keys(settings.limits||{}).length){settings.limits={};saveSettings()}   // forget any old changed limits
   $("chooseBtn").onclick=()=>showTab("tabLessons");
+  if(settings.name===undefined)$("nameCard").hidden=false;greet();$("nameSet").value=settings.name||"";
+  $("nameCard").onsubmit=e=>{e.preventDefault();saveName($("nameIn").value)};$("nameSkip").onclick=()=>saveName("");
+  $("nameSet").onchange=e=>saveName(e.target.value);
   $("owl").onclick=tellJoke;$("owl").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tellJoke()}};
   Object.keys(tabs).forEach(t=>$(t).onclick=()=>showTab(t));
   showTab("tabRead");
@@ -1030,11 +1053,11 @@ function wire(){
     if(!list.length){speak("No tricky words right now. Great job!");return}practice(list,$("practiceBox2"))};
   $("showLearned").onchange=renderWords;
   $("shareBtn").onclick=shareProgress;$("exportBtn").onclick=downloadCSV;
-  $("voiceSel").onchange=e=>{settings.voice=e.target.value;saveSettings();speak("Hello Rodina. I'm ready to listen.")};
+  $("voiceSel").onchange=e=>{settings.voice=e.target.value;saveSettings();speak(`Hello${NM()}. I'm ready to listen.`)};
   $("modeSel").value=settings.mode;$("modeSel").onchange=e=>{settings.mode=e.target.value;saveSettings()};
   $("rateSel").value=String(settings.rate);$("rateSel").onchange=e=>{settings.rate=Number(e.target.value);saveSettings()};
   $("folderBtn").onclick=async()=>{try{dirHandle=await window.showDirectoryPicker({mode:"readwrite"});await idbSet("dir",dirHandle);
-    if(!DB.tries.length){try{const fh=await dirHandle.getFileHandle("rodina-reading-data.json");const f=await fh.getFile();const d=JSON.parse(await f.text());if(d&&d.tries){DB=d;store.set("rodina.db",DB);renderAll()}}catch(e){}}
+    if(!DB.tries.length){try{let fh;try{fh=await dirHandle.getFileHandle("reading-data.json")}catch(_){fh=await dirHandle.getFileHandle("rodina-reading-data.json")}const f=await fh.getFile();const d=JSON.parse(await f.text());if(d&&d.tries){DB=d;store.set("rodina.db",DB);renderAll()}}catch(e){}}
     await saveToFolder(true)}catch(e){}};
 }
 boot();
