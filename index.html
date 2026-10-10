@@ -121,6 +121,11 @@ select{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);b
 .sticker.got{border-color:var(--gold);box-shadow:0 0 0 2px var(--warn-soft)}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
 @media (prefers-reduced-motion:reduce){.owl,.owl *{animation:none!important}.trip .rocket,.trip .track i{transition:none}.starsrow span,.newsticker .big{animation:none}}
+.practice .big.red{color:var(--err)}
+.rounds{display:flex;gap:10px}
+.rounds span{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;border:2px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.rounds span.y{background:var(--ok);border-color:var(--ok);color:var(--paper)}
+.rounds span.n{background:var(--err-soft);border-color:var(--err);color:var(--err)}
 .btn.bigtap{width:100%;font-size:1.25rem;padding:16px 18px;animation:pulse 1.4s ease-in-out infinite}
 .btn.small{padding:9px 13px;font-weight:400;font-size:.92rem}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -282,6 +287,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
     </section>
 
     <div class="warnbox" id="deafBox" hidden><p><b>The teacher can’t hear her.</b> No words are coming through the microphone. Pause, make sure the microphone is allowed for this page, then press <b>Keep reading</b>. Until the teacher can hear, mistakes aren’t counted and she can’t pass.</p></div>
+    <div id="reviewBox" hidden aria-live="polite"></div>
     <div id="resultBox" hidden></div>
     <div id="practiceBox" hidden></div>
 
@@ -352,6 +358,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <label>Teacher voice<select id="voiceSel"></select></label>
         <label>When she makes a mistake
           <select id="modeSel">
+            <option value="para">Mark it red, then say it 3 times at the end of the paragraph</option>
             <option value="now">Say the right word right away</option>
             <option value="end">Wait, then go over mistakes at the end</option>
           </select></label>
@@ -362,7 +369,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <button class="btn" id="folderBtn" type="button">Save records to a folder…</button>
         <span class="hint" id="folderState"></span>
       </div>
-      <p class="hint" style="opacity:.7">App version: 8 Oct 2026 · 18:00 (fixed timer)</p>
+      <p class="hint" style="opacity:.7">App version: 10 Oct 2026 · 17:00 (paragraph practice)</p>
       <p class="hint">Records stay in this browser on this device. Use <b>Send progress</b> to share them by Messages, Mail or AirDrop.</p>
     </div>
   </section>
@@ -449,7 +456,8 @@ async function boot(){
 /* ================= APP ================= */
 let LESSONS={}, ORDER=[];
 let DB=store.get("rodina.db",{tries:[],words:{}});DB.tries=DB.tries||[];DB.words=DB.words||{};
-let settings=store.get("rodina.settings",{voice:"",mode:"now",rate:0.9,lesson:"26",part:0,limits:{}});
+let settings=store.get("rodina.settings",{voice:"",mode:"para",modeV2:true,rate:0.9,lesson:"26",part:0,limits:{}});
+if(!settings.modeV2){settings.mode="para";settings.modeV2=true;store.set("rodina.settings",settings)}
 settings.limits=settings.limits||{};
 const saveDB=()=>{store.set("rodina.db",DB);saveToFolder(false)};
 const saveSettings=()=>store.set("rodina.settings",settings);
@@ -478,6 +486,8 @@ const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(nav
 let L="26",cur=0;
 let tokens=[],units=[],st=newState(),view=[];
 let manual=new Map(),history=[];
+let reviewCredit={};
+let paraOfD=[],paraLastUnit={},reviewedParas=new Set(),reviewing=false,reviewToken=0;
 let muteUntil=0,recSess=0,recOk=false;const tainted=new Set();
 let running=false,elapsed=0,t0=0,tick=null,teacherTalking=false,listening=false,rec=null,wake=null,ended=false,heardAny=false,deafTimer=null;
 
@@ -529,18 +539,19 @@ function renderText(){
   const p=P();
   $("partTitle").textContent=`Part ${cur+1} of ${LESSONS[L].parts.length}`+(p.title.startsWith("Part ")?"":` · ${p.title}`);
   $("partMeta").innerHTML=`<span>${p.words} words</span><span>·</span><span>${p.level}</span><span>·</span><span id="limMeta">Time limit ${fmt(limitOf())}</span>`;
-  const box=$("text");box.innerHTML="";box.classList.toggle("poem",!!LESSONS[L].poem);tokens=[];view=[];
-  p.paras.forEach(par=>{
+  const box=$("text");box.innerHTML="";box.classList.toggle("poem",!!LESSONS[L].poem);tokens=[];view=[];paraOfD=[];
+  p.paras.forEach((par,pi)=>{
     if(par.startsWith("## ")){const h=document.createElement("h3");h.textContent=par.slice(3);box.appendChild(h);return}
     const el=document.createElement("p");
     par.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){el.appendChild(document.createTextNode(tok));return}
       tok.split(/(—)/).forEach(piece=>{if(!piece)return;if(piece==="—"){el.appendChild(document.createTextNode("—"));return}
-        const d=tokens.length;tokens.push(piece);
+        const d=tokens.length;tokens.push(piece);paraOfD[d]=pi;
         const s=document.createElement("span");s.className="w";s.textContent=piece;s.tabIndex=0;s.setAttribute("role","button");
         s.onclick=()=>tapWord(d);s.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tapWord(d)}};
         el.appendChild(s);view[d]=s})});
     box.appendChild(el)});
   units=makeUnits(tokens);
+  paraLastUnit={};units.forEach((u,i)=>{paraLastUnit[paraOfD[u.d]]=i});
 }
 function wordStatus(stt){const res=new Array(tokens.length).fill(null);const heard=new Array(tokens.length).fill("");
   stt.marks.forEach((m,i)=>{const d=units[i].d;if(m.s==="err"){res[d]="err";heard[d]=m.heard||""}else if(res[d]!=="err")res[d]="ok"});
@@ -565,7 +576,7 @@ function renderBooth(){
   const lamps=$("lamps");lamps.innerHTML="";for(let i=0;i<Math.max(MAX_ERR+1,n);i++){const d=document.createElement("span");d.className="lamp"+(i<n?" on":"")+(i>=MAX_ERR?" fourth":"");lamps.appendChild(d)}
   $("errText").textContent=`${n} mistake${n===1?"":"s"}${n>MAX_ERR?" · too many":""}`;
   const sb=$("startBtn");sb.textContent=running?"Pause":(elapsed>0?"Keep reading":"Start reading");sb.className="btn "+(running?"stop":"primary");
-  $("doneBtn").disabled=elapsed===0&&!running;$("undoBtn").disabled=history.length===0;
+  $("doneBtn").disabled=(elapsed===0&&!running)||(reviewing&&!running);sb.disabled=reviewing&&!running;$("undoBtn").disabled=history.length===0;
 }
 function renderAll(){renderHeader();renderLessons();renderParts();renderText();paint();renderWords();renderTries();renderFun()}
 function setStatus(html){$("statusText").innerHTML=html}
@@ -600,6 +611,7 @@ function startRec(){
     heardAny=true;$("deafBox").hidden=true;
     if(interim){const c=cloneState(st);feedText(units,c,interim);paint(c);$("heard").textContent="“"+interim.trim()+"”"}else paint();
     if(st.pos>=units.length&&!ended){ended=true;setTimeout(()=>finish(),600)}
+    else checkParagraphs();
   };
   rec.onerror=e=>{if(me!==rec)return;const er=e.error;
     if(er==="no-speech"||er==="aborted")return;
@@ -623,6 +635,7 @@ function onEvents(ev){
   const words=[...new Set(errs.map(u=>cleanWord(tokens[u.d])))];
   hoot("oops",pick(OOPS));
   if(settings.mode==="now")correctNow(words,errs.map(u=>u.d));
+  else if(settings.mode==="para")setStatus("Keep reading! We’ll practice the <b style=\"color:var(--err)\">red</b> words at the end of the paragraph.");
 }
 async function correctNow(words,ds){
   if(teacherTalking)return;
@@ -641,6 +654,56 @@ async function correctNow(words,ds){
   renderBooth();
 }
 
+
+/* ---------- end-of-paragraph review: say each red word 3 times with Hoot ---------- */
+function wrongWordsIn(paras){const set=new Set(paras);const out=[];const seen=new Set();
+  mistakes().forEach(m=>{if(!set.has(paraOfD[m.d]))return;const w=m.word.replace(/[’']s$/,"");const k=w.toLowerCase();if(w&&!seen.has(k)){seen.add(k);out.push(w)}});return out}
+function finishedParas(all){const out=[];for(const k in paraLastUnit){const pi=+k;if(reviewedParas.has(pi))continue;if(all||paraLastUnit[pi]<st.pos)out.push(pi)}return out}
+async function checkParagraphs(){
+  if(settings.mode!=="para"||reviewing||!running||teacherTalking)return;
+  const done=finishedParas(false);if(!done.length)return;
+  done.forEach(pi=>reviewedParas.add(pi));
+  const words=wrongWordsIn(done);
+  if(!words.length){hoot("cheer",pick(["Perfect paragraph! Keep going!","No red words! Super!","That paragraph was great!"]));return}
+  reviewing=true;const tok=++reviewToken;
+  pauseClock();listening=false;if(rec){try{rec.onend=null;rec.abort()}catch(_){}}rec=null;
+  setStatus("Paragraph done! Let’s practice the red words.");renderBooth();
+  await reviewWords(words,tok);
+  reviewing=false;
+  if(tok!==reviewToken||!running)return;
+  hoot("cheer","Great practice! Now keep reading.");
+  if(SR&&IS_IOS){needTap();setStatus("Tap the big button and keep reading.")}
+  else{if(SR)startRec();muteUntil=Date.now()+300;resumeClock();setStatus(SR?"Listening… keep reading.":"Timing. Tap any word she reads wrong.");paint()}
+}
+async function reviewWords(words,tok){
+  const box=$("reviewBox");box.hidden=false;
+  if(SR&&!IS_IOS)pEarStart();
+  const alive=()=>tok===reviewToken;
+  for(let wi=0;wi<words.length&&alive();wi++){const w=words[wi];const marks=[];let skip=false;
+    const draw=(sub,cls,tap)=>{if(!alive())return;
+      box.innerHTML=`<div class="practice review"><div class="eyebrow">Say it 3 times with Hoot · word ${wi+1} of ${words.length}</div>
+        <div class="big ${cls||"red"}">${w}</div>
+        <div class="rounds" aria-label="${marks.filter(Boolean).length} of 3 said right">${[0,1,2].map(i=>`<span class="${i<marks.length?(marks[i]?"y":"n"):""}">${i<marks.length?(marks[i]?"✓":"•"):i+1}</span>`).join("")}</div>
+        <div class="sub">${sub}</div><div class="row-actions"><button class="btn small" id="rHear" type="button">Hear it</button><button class="btn small" id="rSkip" type="button">Skip this word</button></div></div>`;
+      $("rHear").onclick=()=>speak(w,0.75);$("rSkip").onclick=()=>{skip=true;draw("Skipped.");speechSynthesis.cancel();if(pCancel)pCancel([])};
+      if(tap){const b=document.createElement("button");b.className="btn primary bigtap";b.type="button";b.textContent=`🎤 Tap, then say “${w}”`;
+        b.onclick=()=>{b.remove();draw("Your turn! Say it.");tap()};box.querySelector(".practice").appendChild(b)}};
+    box.scrollIntoView({behavior:"smooth",block:"center"});
+    for(let r=0;r<3&&alive()&&!skip;r++){
+      draw(r===0?"Listen to Hoot…":"Again! Listen…");
+      if(IS_IOS)pEarStop();
+      await speak(r===0?`Let's say it together. ${w}.`:`${w}.`,0.8);if(!alive()||skip)break;
+      draw(SR?"Your turn! Say it.":"Your turn! Say it out loud.");
+      const alts=SR?await listenOnce(go=>draw("Tap the button, then say the word.",null,go)):[w];if(!alive()||skip)break;
+      const ok=SR?heardMatches(alts,w):true;marks.push(ok);
+      draw(ok?["Yes!","Great!","Perfect!"][r]:`I heard “${alts[0]||"nothing"}”. Listen again.`,ok?"ok":"red");
+      if(ok)chime(false);await new Promise(z=>setTimeout(z,450));
+    }
+    const k=w.toLowerCase();if(marks.filter(Boolean).length>=2)reviewCredit[k]=(reviewCredit[k]||0)+1;
+    if(alive()&&marks.length===3)hoot("party",marks.every(Boolean)?`You said <b>${w}</b> 3 times!`:`Good work on <b>${w}</b>!`);
+  }
+  pEarStop();saveDB();renderWords();if(alive())box.hidden=true;
+}
 /* ---------- timer ---------- */
 function resumeClock(){t0=performance.now()-elapsed*1000;clearInterval(tick);tick=setInterval(()=>{elapsed=(performance.now()-t0)/1000;renderBooth()},250)}
 function pauseClock(){if(tick)elapsed=(performance.now()-t0)/1000;clearInterval(tick);tick=null}
@@ -657,8 +720,8 @@ async function startReading(){
   clearTimeout(deafTimer);deafTimer=setTimeout(()=>{if(running&&!heardAny)$("deafBox").hidden=false},10000);
   paint();
 }
-function pause(){running=false;pauseClock();stopRec();$("resumeMic").hidden=true;if(wake){wake.release().catch(()=>{});wake=null}setStatus("Paused. Press <b>Keep reading</b> to go on.");paint()}
-function resetAttempt(){pause();clearTimeout(deafTimer);heardAny=false;$("deafBox").hidden=true;elapsed=0;st=newState();manual=new Map();history=[];ended=false;$("resultBox").hidden=true;$("practiceBox").hidden=true;$("heard").textContent="";setStatus("Press <b>Start reading</b>, then Rodina reads out loud.")}
+function pause(){running=false;if(reviewing){reviewToken++;reviewing=false;if(pCancel)pCancel([]);pEarStop();$("reviewBox").hidden=true}pauseClock();stopRec();$("resumeMic").hidden=true;if(wake){wake.release().catch(()=>{});wake=null}setStatus("Paused. Press <b>Keep reading</b> to go on.");paint()}
+function resetAttempt(){pause();reviewedParas=new Set();reviewCredit={};clearTimeout(deafTimer);heardAny=false;$("deafBox").hidden=true;elapsed=0;st=newState();manual=new Map();history=[];ended=false;$("resultBox").hidden=true;$("practiceBox").hidden=true;$("heard").textContent="";setStatus("Press <b>Start reading</b>, then Rodina reads out loud.")}
 
 async function finish(fromClick,grownup){
   if(fromClick)ensureFolderPermission();
@@ -678,6 +741,8 @@ async function finish(fromClick,grownup){
     box.scrollIntoView({behavior:"smooth",block:"nearest"});
     return}
   if(st.buffer.length&&units[st.pos]&&!units[st.pos].num&&units.length-st.pos<=3){st.marks.set(st.pos,{s:"err",heard:st.buffer.join(" ")});st.pos++;st.buffer=[]}
+  if(settings.mode==="para"&&!grownup){const left=finishedParas(true);left.forEach(pi=>reviewedParas.add(pi));const lw=wrongWordsIn(left);
+    if(lw.length){setStatus("Let’s practice the red words.");reviewing=true;renderBooth();const tok=++reviewToken;await reviewWords(lw,tok);reviewing=false;renderBooth();if(tok!==reviewToken)return}}
   const ms=mistakes(),n=ms.length,lim=limitOf(),secs=Math.round(elapsed);
   const left=units.length-st.pos;const readAll=grownup||!SR||left<=3;
   const okErr=n<=MAX_ERR,okTime=secs<=lim,pass=okErr&&okTime&&readAll;
@@ -686,7 +751,7 @@ async function finish(fromClick,grownup){
   DB.tries.push({date,lesson:L,part:cur,partTitle:P().title,lessonTitle:LESSONS[L].title,try:tryNo,secs,limit:lim,errors:n,pass,finished:readAll,mistakes:ms.map(m=>({word:m.word,heard:m.heard}))});
   ms.forEach(m=>{const k=m.word.toLowerCase().replace(/[’']s$/,"");if(!k)return;
     const w=DB.words[k]||(DB.words[k]={word:m.word.replace(/[’']s$/,""),missed:0,heard:[],last:"",lesson:L,ok:0});
-    w.missed++;w.last=date;w.lesson=L;w.ok=Math.max(0,(w.ok||0)-1);if(m.heard&&!w.heard.includes(m.heard)){w.heard.unshift(m.heard);w.heard=w.heard.slice(0,4)}});
+    w.missed++;w.last=date;w.lesson=L;w.ok=Math.max(0,(w.ok||0)-1);if(reviewCredit[k]){w.ok+=reviewCredit[k];w.lastPractice=date;delete reviewCredit[k]}if(m.heard&&!w.heard.includes(m.heard)){w.heard.unshift(m.heard);w.heard=w.heard.slice(0,4)}});
   saveDB();
   const lastPart=cur===LESSONS[L].parts.length-1;
   const nextLesson=ORDER[ORDER.indexOf(L)+1];
@@ -739,7 +804,7 @@ async function modelRead(){
 }
 
 /* ---------- word practice ---------- */
-let pEar=null,pWait=null,pDead=false,pSess=0,pTapUI=null;const pTaint=new Set();
+let pEar=null,pWait=null,pDead=false,pSess=0,pTapUI=null,pCancel=null;const pTaint=new Set();
 function pEarStart(){
   if(!SR||pEar)return;pDead=false;const r=new SR();r.lang="en-US";r.continuous=!IS_ANDROID;r.interimResults=true;r.maxAlternatives=5;pEar=r;pSess++;
   r.onresult=e=>{if(pEar!==r)return;for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];const k=pSess+":"+i;
@@ -752,7 +817,7 @@ function pEarStart(){
 function pEarStop(){const r=pEar;pEar=null;pWait=null;if(r){try{r.onend=null;r.abort()}catch(_){}}}
 function listenOnce(showTap){return new Promise(res=>{if(!SR)return res([]);
   let done=false,t1=null,t2=null,taps=0;
-  const fin=a=>{if(done)return;done=true;clearTimeout(t1);clearTimeout(t2);if(pWait===fin)pWait=null;pTapUI=null;res(a)};
+  const fin=a=>{if(done)return;done=true;clearTimeout(t1);clearTimeout(t2);if(pWait===fin)pWait=null;if(pCancel===fin)pCancel=null;pTapUI=null;res(a)};pCancel=fin;
   const arm=()=>{clearTimeout(t1);clearTimeout(t2);t1=setTimeout(()=>{if(!done)pWait=fin},300);t2=setTimeout(()=>fin([]),6300)};
   pTapUI=()=>{if(done)return;clearTimeout(t1);clearTimeout(t2);pWait=null;
     if(!showTap||taps>=3)return fin([]);
