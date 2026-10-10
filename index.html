@@ -267,8 +267,6 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
       <div class="clock">
         <div class="t" id="time">0:00</div>
         <div class="lim">Limit <span id="limit">2:00</span>
-          <button type="button" id="limDown" aria-label="Less time">−</button>
-          <button type="button" id="limUp" aria-label="More time">+</button>
         </div>
       </div>
       <div class="lamps"><div class="row" id="lamps" aria-hidden="true"></div><small id="errText">0 mistakes</small></div>
@@ -364,7 +362,7 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <button class="btn" id="folderBtn" type="button">Save records to a folder…</button>
         <span class="hint" id="folderState"></span>
       </div>
-      <p class="hint" style="opacity:.7">App version: 7 Oct 2026 · 15:00 (Hoot)</p>
+      <p class="hint" style="opacity:.7">App version: 8 Oct 2026 · 18:00 (fixed timer)</p>
       <p class="hint">Records stay in this browser on this device. Use <b>Send progress</b> to share them by Messages, Mail or AirDrop.</p>
     </div>
   </section>
@@ -485,7 +483,7 @@ let running=false,elapsed=0,t0=0,tick=null,teacherTalking=false,listening=false,
 
 const P=()=>LESSONS[L].parts[cur];
 const key=()=>L+":"+cur;
-const limitOf=()=>settings.limits[key()]??P().limit;
+const limitOf=()=>P().limit;   // fixed by the lesson; cannot be changed
 const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
 const passedPart=(l,i)=>DB.tries.some(r=>r.lesson===l&&r.part===i&&r.pass);
 const unlocked=i=>i===0||passedPart(L,i-1);
@@ -958,8 +956,7 @@ function wire(){
   $("modelBtn").onclick=modelRead;
   $("undoBtn").onclick=()=>{const d=history.pop();if(d===undefined)return;manual.delete(d);paint()};
   $("resumeMic").onclick=()=>{$("resumeMic").hidden=true;if(!running)return;startRec();if(listening){muteUntil=Date.now()+250;resumeClock();setStatus("Listening… keep reading.")}paint()};
-  const lim=d=>{settings.limits[key()]=Math.min(600,Math.max(60,limitOf()+d));saveSettings();renderBooth();const m=$("limMeta");if(m)m.textContent=`Time limit ${fmt(limitOf())}`};
-  $("limUp").onclick=()=>lim(15);$("limDown").onclick=()=>lim(-15);
+  if(Object.keys(settings.limits||{}).length){settings.limits={};saveSettings()}   // forget any old changed limits
   $("chooseBtn").onclick=()=>showTab("tabLessons");
   $("owl").onclick=tellJoke;$("owl").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tellJoke()}};
   Object.keys(tabs).forEach(t=>$(t).onclick=()=>showTab(t));
