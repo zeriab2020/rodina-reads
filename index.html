@@ -366,7 +366,8 @@ ol.q{margin:8px 0 0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
         <label>Reader’s name<input id="nameSet" maxlength="30" autocomplete="off" style="font:inherit;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 12px;max-width:100%"></label>
         <label>When she makes a mistake
           <select id="modeSel">
-            <option value="para">Mark it red, then say it 3 times at the end of the paragraph</option>
+            <option value="part">Mark it red, then say it 3 times at the end of the part</option>
+            <option value="para">Mark it red, then say it 3 times at the end of each paragraph</option>
             <option value="now">Say the right word right away</option>
             <option value="end">Wait, then go over mistakes at the end</option>
           </select></label>
@@ -414,7 +415,7 @@ function cloneState(s){return {pos:s.pos,buffer:s.buffer.slice(),marks:new Map(s
 function feed(units,st,raw){
   const h=norm(raw);if(!h)return [];
   const events=[];
-  for(let b=1;b<=8;b++){const pu=units[st.pos-b];if(pu&&!pu.num&&similar(h,pu.n)&&!(units[st.pos]&&similar(h,units[st.pos].n)))return events}
+  for(let b=1;b<=8;b++){const pu=units[st.pos-b];if(pu&&!pu.num&&similar(h,pu.n)&&!(units[st.pos]&&similar(h,units[st.pos].n))&&!(st.buffer.length&&units[st.pos+1]&&similar(h,units[st.pos+1].n)))return events}
   const LOOK=5;let found=-1;
   for(let k=0;k<=LOOK;k++){const u=units[st.pos+k];if(!u)break;
     const match=u.num?isNumWord(h):similar(h,u.n);
@@ -431,6 +432,7 @@ function feed(units,st,raw){
     if(u&&u.num&&isNumWord(h))return events;
     if(st.pos>0&&units[st.pos-1].num&&isNumWord(h))return events;
     st.buffer.push(h);
+    if(resync(units,st,events))return events;
     if(st.buffer.length>=3&&u){
       st.marks.set(st.pos,{s:u.num?"ok":"err",heard:st.buffer.join(" ")});
       if(!u.num)events.push({type:"err",i:st.pos});
@@ -438,6 +440,25 @@ function feed(units,st,raw){
     }
   }
   return events;
+}
+/* catch up: if the microphone missed some words (phone restarts, a cough, the start of a phrase),
+   find where she is now from the last 2–3 words she said, and move the blue box there */
+const SYNC_FAR=30,SYNC_FREE=12;
+function resync(units,st,events){
+  const b=st.buffer,n=b.length;if(n<2)return false;
+  for(const len of [3,2]){if(n<len)continue;
+    const seq=b.slice(n-len);
+    if(len===2&&seq.every(w=>COMMON.has(w)||w.length<4))continue;   // two tiny words are not enough to be sure
+    if(len===3&&seq.every(w=>COMMON.has(w)))continue;
+    for(let k=1;k<=SYNC_FAR;k++){const j=st.pos+k;if(j+len>units.length)break;
+      let ok=true;for(let t=0;t<len;t++){const u=units[j+t];if(u.num?!isNumWord(seq[t]):!similar(seq[t],u.n)){ok=false;break}}
+      if(!ok)continue;
+      const gap=j-st.pos,skipped=gap>SYNC_FREE;   // a short gap = the mic missed it; a long one = she skipped a line
+      for(let i=st.pos;i<j;i++){if(units[i].num||!skipped)st.marks.set(i,{s:"ok"});else{st.marks.set(i,{s:"err",heard:""});events.push({type:"err",i})}}
+      for(let t=0;t<len;t++){st.marks.set(j+t,{s:"ok"});events.push({type:"ok",i:j+t})}
+      st.pos=j+len;st.buffer=[];return true}
+  }
+  return false;
 }
 function feedText(units,st,text){const ev=[];String(text).split(/[\s\-—]+/).forEach(w=>ev.push(...feed(units,st,w)));return ev}
 function scoreAlt(units,st,text){const c=cloneState(st);const ev=feedText(units,c,text);return ev.reduce((a,e)=>a+(e.type==="ok"?1:-1.5),0)}
@@ -469,9 +490,10 @@ async function boot(){
 /* ================= APP ================= */
 let LESSONS={}, ORDER=[];
 let DB=store.get("rodina.db",{tries:[],words:{}});DB.tries=DB.tries||[];DB.words=DB.words||{};
-let settings=store.get("rodina.settings",{voice:"",mode:"para",modeV2:true,rate:0.9,lesson:"26",part:0,limits:{}});
+let settings=store.get("rodina.settings",{voice:"",mode:"part",modeV2:true,modeV3:true,rate:0.9,lesson:"26",part:0,limits:{}});
 if(settings.name===undefined&&store.get("rodina.db",{tries:[]}).tries.length)settings.name="Rodina";   // existing reader keeps her name
-if(!settings.modeV2){settings.mode="para";settings.modeV2=true;store.set("rodina.settings",settings)}
+if(!settings.modeV2){settings.mode="part";settings.modeV2=true;store.set("rodina.settings",settings)}
+if(!settings.modeV3){if(settings.mode==="para")settings.mode="part";settings.modeV3=true;store.set("rodina.settings",settings)}
 settings.limits=settings.limits||{};
 const saveDB=()=>{store.set("rodina.db",DB);saveToFolder(false)};
 const saveSettings=()=>store.set("rodina.settings",settings);
@@ -655,6 +677,7 @@ function onEvents(ev){
   const words=[...new Set(errs.map(u=>cleanWord(tokens[u.d])))];
   hoot("oops",pick(OOPS));
   if(settings.mode==="now")correctNow(words,errs.map(u=>u.d));
+  else if(settings.mode==="part")setStatus("Keep reading! We’ll practice the <b style=\"color:var(--err)\">red</b> words at the end of the part.");
   else if(settings.mode==="para")setStatus("Keep reading! We’ll practice the <b style=\"color:var(--err)\">red</b> words at the end of the paragraph.");
 }
 async function correctNow(words,ds){
@@ -761,8 +784,8 @@ async function finish(fromClick,grownup){
     box.scrollIntoView({behavior:"smooth",block:"nearest"});
     return}
   if(st.buffer.length&&units[st.pos]&&!units[st.pos].num&&units.length-st.pos<=3){st.marks.set(st.pos,{s:"err",heard:st.buffer.join(" ")});st.pos++;st.buffer=[]}
-  if(settings.mode==="para"&&!grownup){const left=finishedParas(true);left.forEach(pi=>reviewedParas.add(pi));const lw=wrongWordsIn(left);
-    if(lw.length){setStatus("Let’s practice the red words.");reviewing=true;renderBooth();const tok=++reviewToken;await reviewWords(lw,tok);reviewing=false;renderBooth();if(tok!==reviewToken)return}}
+  if((settings.mode==="para"||settings.mode==="part")&&!grownup){const left=finishedParas(true);left.forEach(pi=>reviewedParas.add(pi));const lw=settings.mode==="part"?[...new Set(mistakes().map(m=>m.word.replace(/[’']s$/,"")).filter(Boolean).map(w=>w.toLowerCase()))].map(k=>mistakes().find(m=>m.word.replace(/[’']s$/,"").toLowerCase()===k).word.replace(/[’']s$/,"")):wrongWordsIn(left);
+    if(lw.length){setStatus(settings.mode==="part"?"Part done! Let’s practice the red words.":"Let’s practice the red words.");reviewing=true;renderBooth();const tok=++reviewToken;if(settings.mode==="part"){hoot("think",`Part done! Let’s practice ${lw.length===1?"the red word":"the "+lw.length+" red words"}.`);await speak(`Great reading! Now let's practice the ${lw.length===1?"red word":"red words"}. Say each one 3 times with me.`)}if(tok===reviewToken)await reviewWords(lw,tok);reviewing=false;renderBooth();if(tok!==reviewToken)return}}
   const ms=mistakes(),n=ms.length,lim=limitOf(),secs=Math.round(elapsed);
   const left=units.length-st.pos;const readAll=grownup||!SR||left<=3;
   const okErr=n<=MAX_ERR,okTime=secs<=lim,pass=okErr&&okTime&&readAll;
